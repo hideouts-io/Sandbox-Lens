@@ -1,0 +1,5 @@
+;; Synthetic teaching example. Not an Apple profile.
+(version 1)
+(deny default)
+(allow network-outbound
+    (remote tcp "example.invalid:443"))
