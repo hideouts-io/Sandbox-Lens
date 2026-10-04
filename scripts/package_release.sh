@@ -27,7 +27,7 @@ verify_binary() {
   local minimum_version
 
   for architecture in arm64 x86_64; do
-    /usr/bin/lipo -verify_arch "$architecture" "$binary_path"
+    /usr/bin/lipo "$binary_path" -verify_arch "$architecture"
     minimum_version="$(
       /usr/bin/vtool -show-build -arch "$architecture" "$binary_path" \
         | /usr/bin/awk '$1 == "minos" { print $2; exit }'
