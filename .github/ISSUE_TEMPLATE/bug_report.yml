@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a reproducible Sandbox Lens behavior problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, usernames, private profile contents, or unrelated system data.
+  - type: input
+    id: app-version
+    attributes:
+      label: Sandbox Lens version
+      placeholder: 0.1.0 (1)
+    validations:
+      required: true
+  - type: input
+    id: macos-build
+    attributes:
+      label: macOS product version and build
+      placeholder: 27.0 (26A428)
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Mac architecture
+      options:
+        - Apple Silicon
+        - Intel
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include the exact action, result, and error text with personal paths redacted.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open...
+        2. Select...
+        3. Observe...
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data check
+      options:
+        - label: I removed credentials, usernames, private profile contents, and unrelated system data.
+          required: true

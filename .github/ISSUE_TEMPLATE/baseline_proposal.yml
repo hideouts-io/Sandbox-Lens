@@ -1,0 +1,50 @@
+name: Baseline proposal
+description: Propose a reproducible macOS sandbox-profile reference
+title: "[Baseline]: macOS "
+labels: [baseline]
+body:
+  - type: markdown
+    attributes:
+      value: Propose provenance here, not raw Apple profile text. Read CONTRIBUTING.md first.
+  - type: input
+    id: version
+    attributes:
+      label: macOS product version
+      placeholder: 15.7.9
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: macOS build
+      placeholder: Exact build identifier
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source URL or documented acquisition method
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Exact source revision or installer identity
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Provenance and independent verification
+      description: Describe acquisition date, architecture, channel, original paths, and corroboration.
+    validations:
+      required: true
+  - type: checkboxes
+    id: restrictions
+    attributes:
+      label: Contribution checks
+      options:
+        - label: I will not attach or commit raw profile text without confirmed redistribution permission.
+          required: true
+        - label: I understand that a nearby version is not an exact-build baseline.
+          required: true

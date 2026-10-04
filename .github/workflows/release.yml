@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package-and-release:
+    name: Package and publish
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Package and verify
+        run: ./scripts/package_release.sh
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES_FILE="docs/releases/${GITHUB_REF_NAME}.md"
+          PUBLISHED_NOTES="$RUNNER_TEMP/${GITHUB_REF_NAME}-release-notes.md"
+          if [[ ! -f "$NOTES_FILE" ]]; then
+            echo "release notes are missing: $NOTES_FILE" >&2
+            exit 1
+          fi
+          cp "$NOTES_FILE" "$PUBLISHED_NOTES"
+          {
+            printf '\n## SHA-256\n\n```text\n'
+            cat dist/release/SHA256SUMS.txt
+            printf '```\n'
+          } >>"$PUBLISHED_NOTES"
+          gh release create "$GITHUB_REF_NAME" \
+            dist/release/Sandbox-Lens-*-macOS-universal.zip \
+            dist/release/SHA256SUMS.txt \
+            --title "Sandbox Lens ${GITHUB_REF_NAME}" \
+            --notes-file "$PUBLISHED_NOTES" \
+            --verify-tag
