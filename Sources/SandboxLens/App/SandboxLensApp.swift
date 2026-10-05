@@ -30,7 +30,17 @@ struct SandboxLensApp: App {
                     }
                 }
                 .keyboardShortcut("r", modifiers: [.command])
-                .disabled(model.isScanning)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
+            }
+            CommandMenu("Export") {
+                Button("Runtime research specimen…") {
+                    Task {
+                        await model.exportRuntimeResearchSpecimen()
+                    }
+                }
+                .accessibilityIdentifier("export.runtimeResearchSpecimen")
+                .disabled(!model.canExportRuntimeResearchSpecimen)
+                .help(model.runtimeSpecimenExportHelp)
             }
         }
 

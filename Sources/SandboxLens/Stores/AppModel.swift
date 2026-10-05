@@ -16,6 +16,8 @@ final class AppModel: ObservableObject {
     @Published var selectedDestination: SidebarDestination = .overview
     @Published var searchText = ""
     @Published private(set) var isScanning = false
+    @Published private(set) var isExporting = false
+    @Published private(set) var runtimeSpecimenExportURL: URL?
     @Published var errorMessage: String?
 
     private let scanner = ProfileScanner()
@@ -58,6 +60,33 @@ final class AppModel: ObservableObject {
         }
         return baseline.productVersion == systemIdentity.productVersion &&
             baseline.buildVersion == systemIdentity.buildVersion
+    }
+
+    var canExportRuntimeResearchSpecimen: Bool {
+        !isScanning && !isExporting && scanResult != nil &&
+            systemIdentity != nil && selectedComparison?.scanned != nil
+    }
+
+    var runtimeSpecimenExportHelp: String {
+        if isScanning {
+            return "Wait for the scan to finish before exporting."
+        }
+        if isExporting {
+            return "A runtime research specimen export is already in progress."
+        }
+        guard scanResult != nil else {
+            return "Scan profiles before exporting a runtime research specimen."
+        }
+        guard systemIdentity != nil else {
+            return "The scanning host's macOS version and build are unavailable."
+        }
+        guard let selectedComparison else {
+            return "Select a scanned profile to export its original bytes."
+        }
+        guard selectedComparison.scanned != nil else {
+            return "This baseline-only row has no original profile bytes to export."
+        }
+        return "Copy the selected profile and static evidence into a new folder for external research."
     }
 
     func bootstrap() async {
@@ -109,9 +138,80 @@ final class AppModel: ObservableObject {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
+    func exportRuntimeResearchSpecimen() async {
+        guard canExportRuntimeResearchSpecimen,
+              let comparison = selectedComparison,
+              let scan = scanResult,
+              let host = systemIdentity else {
+            errorMessage = runtimeSpecimenExportHelp
+            return
+        }
+        let baseline = selectedBaseline
+        isExporting = true
+        errorMessage = nil
+        runtimeSpecimenExportURL = nil
+        defer {
+            isExporting = false
+        }
+
+        do {
+            let app = try RuntimeSpecimenAppIdentity.read(bundle: .main)
+            guard let destination = try await chooseRuntimeSpecimenDestination(fileName: comparison.fileName) else {
+                return
+            }
+            let exportedAt = Date()
+            try await Task.detached(priority: .userInitiated) {
+                try RuntimeSpecimenExporter.export(
+                    comparison: comparison,
+                    scan: scan,
+                    baseline: baseline,
+                    host: host,
+                    app: app,
+                    destination: destination,
+                    exportedAt: exportedAt
+                )
+            }.value
+            runtimeSpecimenExportURL = destination
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func chooseRuntimeSpecimenDestination(fileName: String) async throws -> URL? {
+        let panel = NSSavePanel()
+        let validator = RuntimeSpecimenSavePanelDelegate()
+        panel.delegate = validator
+        panel.title = "Export Runtime Research Specimen"
+        panel.prompt = "Export"
+        panel.nameFieldLabel = "Specimen folder:"
+        panel.nameFieldStringValue = "\(URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent)-runtime-specimen"
+        panel.message = "Enter a new folder name. The export copies static evidence and does not run the profile."
+        panel.canCreateDirectories = true
+
+        let response: NSApplication.ModalResponse = await withCheckedContinuation { continuation in
+            panel.begin { response in
+                withExtendedLifetime(validator) {
+                    continuation.resume(returning: response)
+                }
+            }
+        }
+        switch response {
+        case .cancel:
+            return nil
+        case .OK:
+            guard let url = panel.url else {
+                throw RuntimeSpecimenSavePanelError.noDestination
+            }
+            return url
+        default:
+            throw RuntimeSpecimenSavePanelError.panelFailed(response: response.rawValue)
+        }
+    }
+
     private func scan(roots: [ScanRoot]) async {
         isScanning = true
         errorMessage = nil
+        runtimeSpecimenExportURL = nil
         defer {
             isScanning = false
         }
@@ -172,6 +272,32 @@ final class AppModel: ObservableObject {
     private func numericVersionParts(_ version: String) -> [Int] {
         version.split(separator: ".").map { component in
             Int(component.prefix(while: { $0.isNumber })) ?? -1
+        }
+    }
+}
+
+@MainActor
+private final class RuntimeSpecimenSavePanelDelegate: NSObject, NSOpenSavePanelDelegate {
+    func panel(_ sender: Any, validate url: URL) throws {
+        if FileManager.default.fileExists(atPath: url.path) {
+            throw RuntimeSpecimenSavePanelError.destinationExists(path: url.path)
+        }
+    }
+}
+
+private enum RuntimeSpecimenSavePanelError: LocalizedError {
+    case destinationExists(path: String)
+    case noDestination
+    case panelFailed(response: Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .destinationExists(let path):
+            "The specimen destination already exists: \(path). Choose a new folder name; existing items cannot be replaced."
+        case .noDestination:
+            "The export picker did not return a destination folder. Choose a new folder name and try again."
+        case .panelFailed(let response):
+            "The export picker could not complete the selection (panel response \(response)). Try exporting again."
         }
     }
 }

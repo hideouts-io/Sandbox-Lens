@@ -28,15 +28,39 @@ struct ContentView: View {
                 } label: {
                     Label("Scan This Mac", systemImage: "play.circle.fill")
                 }
-                .disabled(model.isScanning || model.catalog == nil)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
 
                 Button {
                     isShowingFolderGuide = true
                 } label: {
                     Label("Scan Copied Folder", systemImage: "folder.badge.plus")
                 }
-                .disabled(model.isScanning || model.catalog == nil)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
                 .help("Choose a folder that directly contains copied .sb files")
+
+                Menu {
+                    Button("Runtime research specimen…") {
+                        Task {
+                            await model.exportRuntimeResearchSpecimen()
+                        }
+                    }
+                    .accessibilityIdentifier("export.runtimeResearchSpecimen")
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .accessibilityIdentifier("export.menu")
+                .disabled(!model.canExportRuntimeResearchSpecimen)
+                .help(model.runtimeSpecimenExportHelp)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let url = model.runtimeSpecimenExportURL {
+                Label("Exported specimen: \(url.path)", systemImage: "checkmark.circle")
+                    .font(.caption)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+                    .accessibilityIdentifier("export.runtimeResearchSpecimen.success")
             }
         }
         .fileImporter(
@@ -63,7 +87,7 @@ struct ContentView: View {
                 }
             )
         }
-        .alert("Sandbox Lens could not complete the scan", isPresented: errorPresented) {
+        .alert("Sandbox Lens could not complete the operation", isPresented: errorPresented) {
             Button("OK") {
                 model.errorMessage = nil
             }

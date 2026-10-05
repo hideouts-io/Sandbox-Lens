@@ -1,6 +1,6 @@
 import Foundation
 
-struct SystemIdentity: Hashable, Sendable {
+struct SystemIdentity: Codable, Hashable, Sendable {
     let productVersion: String
     let buildVersion: String
 
@@ -30,7 +30,7 @@ struct ScannedProfile: Identifiable, Hashable, Sendable {
     }
 }
 
-enum ComparisonStatus: String, CaseIterable, Identifiable, Sendable {
+enum ComparisonStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     case match
     case changed
     case missing
@@ -77,7 +77,7 @@ enum ComparisonStatus: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum ComparisonMethod: String, Sendable {
+enum ComparisonMethod: String, Codable, Sendable {
     case exactPath
     case uniqueFileName
     case none
