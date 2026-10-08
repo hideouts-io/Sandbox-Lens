@@ -21,9 +21,13 @@ struct OverviewView: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-                .font(.system(size: 34))
-                .foregroundStyle(.blue)
+            Image("SandboxLensMark", bundle: .module)
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 72, height: 72)
+                .accessibilityLabel("Sandbox Lens")
+                .accessibilityIdentifier("branding.overview.mark")
             Text("Understand your Mac's sandbox rules")
                 .font(.largeTitle.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
@@ -216,9 +220,19 @@ struct WelcomeDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
-            Image(systemName: model.scanResult == nil ? "shield" : "checklist")
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(.blue)
+            if model.scanResult == nil {
+                Image("SandboxLensMark", bundle: .module)
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                    .accessibilityLabel("Sandbox Lens")
+                    .accessibilityIdentifier("branding.welcome.mark")
+            } else {
+                Image(systemName: "checklist")
+                    .font(.system(size: 44, weight: .light))
+                    .foregroundStyle(.blue)
+            }
             Text(model.scanResult == nil ? "A calm, evidence-based review" : "Scan complete")
                 .font(.title.weight(.semibold))
             Text(detailText)
