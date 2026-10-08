@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="Assets/AppIcon.png" width="160" height="160" alt="Sandbox Lens icon">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Assets/Branding/readme-header-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="Assets/Branding/readme-header-light.png">
+    <img src="Assets/Branding/readme-header-light.png" width="800" height="240" alt="Sandbox Lens logo — read-only macOS sandbox policy inspection and comparison">
+  </picture>
 </p>
 
 <h1 align="center">Sandbox Lens</h1>
