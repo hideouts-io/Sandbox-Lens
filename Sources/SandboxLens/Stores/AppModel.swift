@@ -54,6 +54,18 @@ final class AppModel: ObservableObject {
         )
     }
 
+    var visibleSelectedComparison: ProfileComparison? {
+        switch selectedDestination {
+        case .overview, .baselines, .learn:
+            return nil
+        case .allProfiles, .changed, .missing, .unexpected:
+            guard let selectedComparisonID else {
+                return nil
+            }
+            return filteredComparisons.first { $0.id == selectedComparisonID }
+        }
+    }
+
     var exactBaselineSelected: Bool {
         guard let baseline = selectedBaseline, let systemIdentity else {
             return false
@@ -64,7 +76,7 @@ final class AppModel: ObservableObject {
 
     var canExportRuntimeResearchSpecimen: Bool {
         !isScanning && !isExporting && scanResult != nil &&
-            systemIdentity != nil && selectedComparison?.scanned != nil
+            systemIdentity != nil && visibleSelectedComparison?.scanned != nil
     }
 
     var runtimeSpecimenExportHelp: String {
@@ -80,13 +92,13 @@ final class AppModel: ObservableObject {
         guard systemIdentity != nil else {
             return "The scanning host's macOS version and build are unavailable."
         }
-        guard let selectedComparison else {
-            return "Select a scanned profile to export its original bytes."
+        guard let comparison = visibleSelectedComparison else {
+            return "Open a profile list and select a visible scanned profile before exporting."
         }
-        guard selectedComparison.scanned != nil else {
+        guard let scanned = comparison.scanned else {
             return "This baseline-only row has no original profile bytes to export."
         }
-        return "Copy the selected profile and static evidence into a new folder for external research."
+        return "Copy \(scanned.fileName) and its static evidence into a new folder for external research."
     }
 
     func bootstrap() async {
@@ -140,7 +152,8 @@ final class AppModel: ObservableObject {
 
     func exportRuntimeResearchSpecimen() async {
         guard canExportRuntimeResearchSpecimen,
-              let comparison = selectedComparison,
+              let comparison = visibleSelectedComparison,
+              let scanned = comparison.scanned,
               let scan = scanResult,
               let host = systemIdentity else {
             errorMessage = runtimeSpecimenExportHelp
@@ -156,7 +169,7 @@ final class AppModel: ObservableObject {
 
         do {
             let app = try RuntimeSpecimenAppIdentity.read(bundle: .main)
-            guard let destination = try await chooseRuntimeSpecimenDestination(fileName: comparison.fileName) else {
+            guard let destination = try await chooseRuntimeSpecimenDestination(profile: scanned, baseline: baseline) else {
                 return
             }
             let exportedAt = Date()
@@ -177,15 +190,16 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func chooseRuntimeSpecimenDestination(fileName: String) async throws -> URL? {
+    private func chooseRuntimeSpecimenDestination(profile: ScannedProfile, baseline: BaselineRelease?) async throws -> URL? {
         let panel = NSSavePanel()
         let validator = RuntimeSpecimenSavePanelDelegate()
         panel.delegate = validator
         panel.title = "Export Runtime Research Specimen"
         panel.prompt = "Export"
         panel.nameFieldLabel = "Specimen folder:"
-        panel.nameFieldStringValue = "\(URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent)-runtime-specimen"
-        panel.message = "Enter a new folder name. The export copies static evidence and does not run the profile."
+        panel.nameFieldStringValue = "\(URL(fileURLWithPath: profile.fileName).deletingPathExtension().lastPathComponent)-runtime-specimen"
+        panel.message = "Enter a new folder name. This export copies static evidence only."
+        panel.accessoryView = runtimeSpecimenAccessory(profile: profile, baseline: baseline)
         panel.canCreateDirectories = true
 
         let response: NSApplication.ModalResponse = await withCheckedContinuation { continuation in
@@ -206,6 +220,49 @@ final class AppModel: ObservableObject {
         default:
             throw RuntimeSpecimenSavePanelError.panelFailed(response: response.rawValue)
         }
+    }
+
+    private func runtimeSpecimenAccessory(profile: ScannedProfile, baseline: BaselineRelease?) -> NSView {
+        let baselineDescription = baseline.map {
+            "\($0.displayName)\nBuild: \($0.buildVersion)"
+        } ?? "No baseline selected"
+        let fields: [NSView] = [
+            runtimeSpecimenAccessoryField(title: "Source profile", value: profile.fileURL.path, identifier: "export.sourcePath"),
+            runtimeSpecimenAccessoryField(title: "Scanned SHA-256", value: profile.sha256, identifier: "export.sourceSHA256"),
+            runtimeSpecimenAccessoryField(title: "Comparison baseline", value: baselineDescription, identifier: "export.baseline")
+        ]
+        let accessory = NSStackView(views: fields)
+        accessory.orientation = .vertical
+        accessory.alignment = .leading
+        accessory.spacing = 12
+        accessory.edgeInsets = NSEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
+        accessory.translatesAutoresizingMaskIntoConstraints = false
+        accessory.widthAnchor.constraint(equalToConstant: 480).isActive = true
+        for field in fields {
+            field.widthAnchor.constraint(equalTo: accessory.widthAnchor).isActive = true
+        }
+        accessory.setFrameSize(accessory.fittingSize)
+        return accessory
+    }
+
+    private func runtimeSpecimenAccessoryField(title: String, value: String, identifier: String) -> NSView {
+        let heading = NSTextField(labelWithString: title)
+        heading.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        let content = NSTextField(wrappingLabelWithString: value)
+        content.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        content.isEditable = false
+        content.isSelectable = true
+        content.preferredMaxLayoutWidth = 480
+        content.lineBreakMode = .byCharWrapping
+        content.setContentCompressionResistancePriority(.required, for: .vertical)
+        content.setAccessibilityIdentifier(identifier)
+        let field = NSStackView(views: [heading, content])
+        field.orientation = .vertical
+        field.alignment = .leading
+        field.spacing = 3
+        field.translatesAutoresizingMaskIntoConstraints = false
+        content.widthAnchor.constraint(equalTo: field.widthAnchor).isActive = true
+        return field
     }
 
     private func scan(roots: [ScanRoot]) async {

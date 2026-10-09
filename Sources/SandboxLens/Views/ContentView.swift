@@ -37,6 +37,7 @@ struct ContentView: View {
                 }
                 .disabled(model.isScanning || model.isExporting || model.catalog == nil)
                 .help("Choose a folder that directly contains copied .sb files")
+                .accessibilityIdentifier("scan.copiedFolder")
 
                 Menu {
                     Button("Runtime research specimen…") {
@@ -114,7 +115,7 @@ struct ContentView: View {
     private var detailColumn: some View {
         switch model.selectedDestination {
         case .allProfiles, .changed, .missing, .unexpected:
-            ProfileDetailView(comparison: model.selectedComparison, baseline: model.selectedBaseline) {
+            ProfileDetailView(comparison: model.visibleSelectedComparison, baseline: model.selectedBaseline) {
                 model.revealSelectedProfile()
             }
         case .baselines:
@@ -203,6 +204,7 @@ private struct FolderScanGuide: View {
                 Button("Scan This Mac", action: scanMacAction)
                 Button("Choose Copied Folder…", action: chooseFolderAction)
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("scan.chooseCopiedFolder")
             }
         }
         .padding(24)

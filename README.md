@@ -52,7 +52,7 @@ The bundled catalog currently contains **22 build-specific snapshots and 5,342 p
 
 For exported profiles, click **Scan Copied Folder** and choose the folder that directly contains the copied `.sb` files. Do not choose `/`, `/System`, or another broad system directory.
 
-For external runtime research, select a scanned profile and choose **Export → Runtime research specimen…**. Choose a new folder name. The export contains `profile.sb`, `manifest.json`, `sha256.txt`, and `README.txt`; the included README explains the researcher-managed handoff to PolicyWitness. Export does not compile or execute a policy. Missing and baseline-only rows have no source bytes to export.
+For external runtime research, open **All profiles** or a finding list, inspect a selected scanned profile, and choose **Export → Runtime research specimen…**. The save panel identifies the source path, scan fingerprint, and selected baseline independently of the new folder name. Export is unavailable outside a profile list or when the selection is hidden by a filter. The export contains `profile.sb`, `manifest.json`, `sha256.txt`, and `README.txt`; the included README explains the researcher-managed handoff to PolicyWitness. Export does not compile or execute a policy. Missing and baseline-only rows have no source bytes to export.
 
 ## Screenshots
 

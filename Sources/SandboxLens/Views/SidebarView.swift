@@ -40,6 +40,7 @@ struct SidebarView: View {
             }
         }
         .tag(destination)
+        .accessibilityIdentifier("sidebar.\(destination.rawValue)")
     }
 
     @ViewBuilder

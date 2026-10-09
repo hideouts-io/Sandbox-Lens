@@ -36,11 +36,12 @@ Exercise the complete release path:
 
 ## Current coverage
 
-The Swift suite contains 29 tests covering:
+The Swift suite contains 32 tests covering:
 
 - bundled catalog decoding and expected corpus totals;
 - match, different, missing, additional, and symlink classifications;
 - search and category filtering;
+- export eligibility for visible selected sources across navigation, filtering, and baseline-only rows;
 - recursive read-only scanning;
 - rejection of broad, empty, oversized, unreadable, disappeared, and escaping-symlink inputs;
 - UTF-8 validation and broad marker extraction;
