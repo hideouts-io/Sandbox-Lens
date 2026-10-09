@@ -22,6 +22,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .accessibilityIdentifier("sidebar.navigation")
         .safeAreaInset(edge: .bottom) {
             scanStatus
         }
@@ -40,6 +41,7 @@ struct SidebarView: View {
             }
         }
         .tag(destination)
+        .accessibilityIdentifier("sidebar.\(destination.rawValue)")
     }
 
     @ViewBuilder

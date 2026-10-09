@@ -56,7 +56,7 @@ The bundle does not contain the raw Apple profile text. `scripts/build_baseline_
 
 ## Security properties
 
-The app is read-only by design. It does not:
+Scanned files remain read-only. Explicit specimen export creates a fresh folder containing copied bytes and static metadata. The app does not:
 
 - compile, load, or execute a profile;
 - invoke `sandbox-exec`;
