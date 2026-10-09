@@ -26,6 +26,7 @@ struct ComparisonListView: View {
                         .accessibilityIdentifier("profile.\(comparison.id)")
                 }
                 .listStyle(.inset)
+                .accessibilityIdentifier("profiles.list")
             }
         }
         .onChange(of: model.selectedDestination) { _ in

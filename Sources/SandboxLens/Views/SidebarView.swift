@@ -22,6 +22,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .accessibilityIdentifier("sidebar.navigation")
         .safeAreaInset(edge: .bottom) {
             scanStatus
         }
