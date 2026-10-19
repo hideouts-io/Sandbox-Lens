@@ -121,11 +121,11 @@ enum RuntimeSpecimenExporter {
                     root: root.url.path
                 )
             }
-            let next = ancestor.deletingLastPathComponent()
-            guard next.path != ancestor.path else {
+            // Some Foundation versions append ".." when deleting the root URL's last component.
+            guard ancestor.path != "/" else {
                 return
             }
-            ancestor = next
+            ancestor = ancestor.deletingLastPathComponent()
         }
     }
 
