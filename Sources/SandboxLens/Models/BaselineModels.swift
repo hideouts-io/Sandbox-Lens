@@ -58,6 +58,25 @@ struct BaselineRelease: Codable, Identifiable, Hashable, Sendable {
     let notes: String
     let profileCount: Int
     let profiles: [BaselineProfile]
+    let provenance: BaselineProvenance?
+
+    func withProvenance(_ provenance: BaselineProvenance) -> BaselineRelease {
+        BaselineRelease(
+            id: id,
+            displayName: displayName,
+            productVersion: productVersion,
+            buildVersion: buildVersion,
+            releaseChannel: releaseChannel,
+            sourceName: sourceName,
+            sourceURL: sourceURL,
+            sourceCommit: sourceCommit,
+            confidence: confidence,
+            notes: notes,
+            profileCount: profileCount,
+            profiles: profiles,
+            provenance: provenance
+        )
+    }
 
     var isBeta: Bool {
         releaseChannel == "beta"

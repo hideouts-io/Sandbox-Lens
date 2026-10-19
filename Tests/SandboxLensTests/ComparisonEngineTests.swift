@@ -21,7 +21,8 @@ final class ComparisonEngineTests: XCTestCase {
                 baselineProfile(path: "usr/share/sandbox/match.sb", hash: String(repeating: "a", count: 64), analysis: neutral),
                 baselineProfile(path: "usr/share/sandbox/change.sb", hash: String(repeating: "b", count: 64), analysis: neutral),
                 baselineProfile(path: "usr/share/sandbox/missing.sb", hash: String(repeating: "c", count: 64), analysis: neutral)
-            ]
+            ],
+            provenance: nil
         )
         let scanned = [
             scannedProfile(path: "usr/share/sandbox/match.sb", hash: String(repeating: "a", count: 64), analysis: neutral),
@@ -66,7 +67,8 @@ final class ComparisonEngineTests: XCTestCase {
             confidence: "test",
             notes: "Integration fixture",
             profileCount: 1,
-            profiles: [baselineProfile]
+            profiles: [baselineProfile],
+            provenance: nil
         )
         let scanned = ScannedProfile(
             relativePath: baselineProfile.relativePath,

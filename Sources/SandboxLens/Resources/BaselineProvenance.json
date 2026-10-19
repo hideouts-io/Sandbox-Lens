@@ -1,0 +1,657 @@
+{
+  "origin": {
+    "catalogSHA256": "f8bc71369b4f0e873c3ec612660396e752e3795a34094780340de637938fd79c",
+    "generatedAt": "2026-10-19T07:28:05.763438+00:00",
+    "generator": {
+      "name": "SandboxLens baseline manifest generator",
+      "path": "scripts/build_baseline_manifest.py",
+      "revision": "95b518082972306a1bc6d3c25e42ca206582aea3"
+    },
+    "inputs": [
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "bb10f7659461666a819088a5e3e957d2191435d08cb87fc811eb5c72ea2d95c5",
+        "snapshotID": "macos-10.10.5-14F27",
+        "sourceRevision": "4b9db4bdd15f18a880a73ec64aa686e6242eb8a4",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/4b9db4bdd15f18a880a73ec64aa686e6242eb8a4"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "8fa726ec999da8b451c5352c8b572697c6f6a6eca5e47e67aad73ed23397c528",
+        "snapshotID": "macos-10.11.6-15G31",
+        "sourceRevision": "eec9aecd319703fb3fb3acf2686dee7df3224577",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/eec9aecd319703fb3fb3acf2686dee7df3224577"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "7e28e4e24191abd63d0d244387c687c599d7e4671f95c68dc9968abe99945d2a",
+        "snapshotID": "macos-10.12.6-16G29",
+        "sourceRevision": "d7991f8ffd9838387425b5dc416933ac11491959",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/d7991f8ffd9838387425b5dc416933ac11491959"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "079dca5df8ad7ad5eba60db1eb3f1b001d5f47500227279e82816e5475733b83",
+        "snapshotID": "macos-10.13.6-17G65",
+        "sourceRevision": "2b98ec3a3fd04067e9066571cdaa3fe96cb914aa",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/2b98ec3a3fd04067e9066571cdaa3fe96cb914aa"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "d208f58825106aeba5c18e11fa40c2d2577f62fdea4950ae49da0ef1f96e34fc",
+        "snapshotID": "macos-10.14-18A391",
+        "sourceRevision": "a0501d255c6a65427bc6f0c78628a9c37d6c6cf5",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/a0501d255c6a65427bc6f0c78628a9c37d6c6cf5"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "d208f58825106aeba5c18e11fa40c2d2577f62fdea4950ae49da0ef1f96e34fc",
+        "snapshotID": "macos-10.14-beta-10-18A384a",
+        "sourceRevision": "0cf76b89ad33c933c35ea979a1d2e499d28552ea",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/0cf76b89ad33c933c35ea979a1d2e499d28552ea"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "719bb7478ca58298d902c70abc8b7bf16852cd8760565039070b3453d0e29943",
+        "snapshotID": "macos-10.14-beta-7-18A365a",
+        "sourceRevision": "4caae38e50aa1b78d486eda19488e8bb92beafa8",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/4caae38e50aa1b78d486eda19488e8bb92beafa8"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "d208f58825106aeba5c18e11fa40c2d2577f62fdea4950ae49da0ef1f96e34fc",
+        "snapshotID": "macos-10.14-beta-8-18A371a",
+        "sourceRevision": "7632aea6920a1b51d45d0dd9b52597e386e685e8",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/7632aea6920a1b51d45d0dd9b52597e386e685e8"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "d208f58825106aeba5c18e11fa40c2d2577f62fdea4950ae49da0ef1f96e34fc",
+        "snapshotID": "macos-10.14-beta-9-18A377a",
+        "sourceRevision": "bf4a86d230e8e083977798fe9d80d2f8ae59514d",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/bf4a86d230e8e083977798fe9d80d2f8ae59514d"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "f036c2d30e5a05b4f4247a59d5fbe09d2bfdd018bee5e3314d1f306a516b05ab",
+        "snapshotID": "macos-10.14.1-18B75",
+        "sourceRevision": "0046728e9f3949ec953592bade1c0320febad2da",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/0046728e9f3949ec953592bade1c0320febad2da"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "a6c95317615e14859a8b641d155b8a57dd06a36f4b46770da52f279c804d5d44",
+        "snapshotID": "macos-10.14.2-18C54",
+        "sourceRevision": "747d9f31a6ab9df1185f51720e1b63a9ee6bb767",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/747d9f31a6ab9df1185f51720e1b63a9ee6bb767"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "f7818d157507148d9ea903a1a6d98c59a279932c4d9d9a27841f639042783421",
+        "snapshotID": "macos-10.14.4-18E226",
+        "sourceRevision": "e83bb2575e83964f0f3d37b43f7c902e83812f53",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/e83bb2575e83964f0f3d37b43f7c902e83812f53"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "34e4909d3eb9a4ba003ac2dfaf12347608d91a7bedfa9c801765e49d964f2a06",
+        "snapshotID": "macos-10.14.5-18F132",
+        "sourceRevision": "885dfe272b388de94f242896b7790323a5f7bea3",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/885dfe272b388de94f242896b7790323a5f7bea3"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "c1068ed559fd7c87ca45e0a3aae485fd76702721cb6d5e5540e55efc260a8477",
+        "snapshotID": "macos-10.15-19A583",
+        "sourceRevision": "31cb8c9124cbe8dabfec340c4875762073e948ee",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/31cb8c9124cbe8dabfec340c4875762073e948ee"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "0bb841c08698517c85b76b73e9d1567f42c96133af43f6722649180cdc7148b2",
+        "snapshotID": "macos-10.15-beta-1-19A471t",
+        "sourceRevision": "dd69e3ffa7d2f5a1e48cdd0419c4b910687ae813",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/dd69e3ffa7d2f5a1e48cdd0419c4b910687ae813"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "b137f7c89584e0ef644c7c9c8dfda07ef2139032b98478f5324344b4a81fe386",
+        "snapshotID": "macos-10.15.1-19B88",
+        "sourceRevision": "7eed51601f3413041ac533e33fc892748059253b",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/7eed51601f3413041ac533e33fc892748059253b"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "85866ee11d784105b59df9a344bf4b3cc0c07290ab82ff3f2c14b4a50f68b97c",
+        "snapshotID": "macos-10.15.2-19C57",
+        "sourceRevision": "9eb25aecbf1e6e77cba64ead53e0dc31ee97c48d",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/9eb25aecbf1e6e77cba64ead53e0dc31ee97c48d"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "5f827731a20c170e1988b950ae1f6ed6dc3c9370396445f7985841ab2c18ca54",
+        "snapshotID": "macos-10.9.5-13F34",
+        "sourceRevision": "638b32eeb0fcf96ea2310a8073a280c238af1509",
+        "sourceURL": "https://github.com/knightsc/sandbox_profiles/tree/638b32eeb0fcf96ea2310a8073a280c238af1509"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "d80bf7e23218300219c795d9534530f150f6168b30dbe5a8461d625c20b3d590",
+        "snapshotID": "macos-12.6-21G115",
+        "sourceRevision": "e91132f209ae756b0036f1bfbff9effaf9386b82",
+        "sourceURL": "https://github.com/corecryptics/MacOSReports/tree/e91132f209ae756b0036f1bfbff9effaf9386b82/Sandbox/Profiles"
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "ab217dc2fe868680e2f05c16860b30fd41fbe3194671f47c1589a9050f917f9f",
+        "snapshotID": "macos-26.6.2-25G83",
+        "sourceRevision": null,
+        "sourceURL": null
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "42778bd010e3266be717e573c520d54943e41a2ea43823d20abf55497de45534",
+        "snapshotID": "macos-26.7-25G229",
+        "sourceRevision": null,
+        "sourceURL": null
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "e51319823df22f277659a6cd476622c86828c6abbbb37def4c80da1acc2eaccc",
+        "snapshotID": "macos-27.0-26A428",
+        "sourceRevision": null,
+        "sourceURL": null
+      },
+      {
+        "kind": "saved-tree-manifest",
+        "manifestFormat": "sandbox-profile-path-sha256-v1",
+        "manifestSHA256": "3e7ceee93cbda838639c383ea27894222e30756204089a779e19bbcf0e77afd1",
+        "snapshotID": "macos-27.2-26B5112a",
+        "sourceRevision": null,
+        "sourceURL": null
+      }
+    ],
+    "kind": "generated-catalog"
+  },
+  "schemaVersion": 2,
+  "snapshots": [
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.10.5-14F27",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.11.6-15G31",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.12.6-16G29",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.13.6-17G65",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14-18A391",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14-beta-10-18A384a",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14-beta-7-18A365a",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14-beta-8-18A371a",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14-beta-9-18A377a",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14.1-18B75",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14.2-18C54",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14.4-18E226",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.14.5-18F132",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.15-19A583",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.15-beta-1-19A471t",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.15.1-19B88",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.15.2-19C57",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-10.9.5-13F34",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "conflicting",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [
+        {
+          "buildVersion": "21G115",
+          "productVersion": "12.6",
+          "sha256": "0f45d9940400136074f72ec3238c07e6dc6ddbe90e3614b3207d161f3167d548",
+          "url": "https://raw.githubusercontent.com/corecryptics/MacOSReports/e91132f209ae756b0036f1bfbff9effaf9386b82/diagnose-fu/sw_vers.txt"
+        },
+        {
+          "buildVersion": "21G72",
+          "productVersion": "12.5",
+          "sha256": "1cd92e4699532c6429930e3204febd9991143dea4901243ba018eb49a4d06a84",
+          "url": "https://raw.githubusercontent.com/corecryptics/MacOSReports/e91132f209ae756b0036f1bfbff9effaf9386b82/SystemReports/SPSoftwareDataType.spx"
+        }
+      ],
+      "id": "macos-12.6-21G115",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Community source revision is recorded; OS-build attribution and source authenticity are not independently established by hashes.",
+        "Same-commit version reports conflict: 12.6/21G115 versus 12.5/21G72. The exact profile build is unresolved. Original identifiers are preserved as declarations only.",
+        "This snapshot contains no usr/share/sandbox records."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles"
+      ],
+      "sourceKind": "community-snapshot"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-26.6.2-25G83",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Version, build, and stable channel are inherited capture declarations without independent immutable host evidence.",
+        "Local snapshots have no source URL or source revision in the inherited catalog."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "local-capture"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-26.7-25G229",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Version, build, and stable channel are inherited capture declarations without independent immutable host evidence.",
+        "Local snapshots have no source URL or source revision in the inherited catalog."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "local-capture"
+    },
+    {
+      "architecture": null,
+      "attribution": "declared-unverified",
+      "collectedAt": null,
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-27.0-26A428",
+      "limitations": [
+        "Architecture and acquisition date were not recorded; catalog generation time is not acquisition time.",
+        "Only recorded paths are represented; original exclusions, unreadable files, and acquisition completeness were not recorded.",
+        "Saved-byte consistency does not establish Apple authenticity, effective policy, or runtime authorization.",
+        "Version, build, and stable channel are inherited capture declarations without independent immutable host evidence.",
+        "Local snapshots have no source URL or source revision in the inherited catalog."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "local-capture"
+    },
+    {
+      "architecture": "arm64",
+      "attribution": "declared-unverified",
+      "collectedAt": "2026-10-19T07:27:20.757415+00:00",
+      "coverage": "recorded-paths-only",
+      "evidence": [],
+      "id": "macos-27.2-26B5112a",
+      "limitations": [
+        "Product version27.2, build26B5112a and arm64 were observed locally with sw_vers and uname during acquisition; no independent immutable Apple host attestation was obtained.",
+        "Only .sb paths under the two standard profile roots were recorded. Other sandbox policy locations, compiled policies and effective process policies are outside this capture.",
+        "Source path set, dereferenced byte hashes, sizes and symbolic-link targets matched independent inventories before and after copying; this is a point-in-time consistency check, not atomic acquisition or proof of authenticity.",
+        "Release channel is unknown; the capture script stable default was corrected before catalog generation.",
+        "Acquisition time is the local UTC clock observation, not independent timestamp attestation. Private raw files, host inventories and independently retained saved-tree manifests remain outside this repository.",
+        "Saved-byte consistency and derived textual markers do not establish Apple authenticity, safety, loaded policy, effective authorization or runtime behavior."
+      ],
+      "roots": [
+        "System/Library/Sandbox/Profiles",
+        "usr/share/sandbox"
+      ],
+      "sourceKind": "local-capture"
+    }
+  ]
+}

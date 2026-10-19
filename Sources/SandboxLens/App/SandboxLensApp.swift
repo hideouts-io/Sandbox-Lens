@@ -16,7 +16,7 @@ struct SandboxLensApp: App {
     var body: some Scene {
         WindowGroup("Sandbox Lens", id: "main") {
             ContentView(model: model)
-                .frame(minWidth: 1060, minHeight: 680)
+                .frame(minWidth: 1200, minHeight: 680)
                 .task {
                     await model.bootstrap()
                 }
@@ -30,7 +30,17 @@ struct SandboxLensApp: App {
                     }
                 }
                 .keyboardShortcut("r", modifiers: [.command])
-                .disabled(model.isScanning)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
+            }
+            CommandMenu("Export") {
+                Button("Runtime research specimen…") {
+                    Task {
+                        await model.exportRuntimeResearchSpecimen()
+                    }
+                }
+                .accessibilityIdentifier("export.runtimeResearchSpecimen")
+                .disabled(!model.canExportRuntimeResearchSpecimen)
+                .help(model.runtimeSpecimenExportHelp)
             }
         }
 

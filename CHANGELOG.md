@@ -4,6 +4,18 @@ All notable user-facing changes are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Runtime research specimen export with verified source bytes, static provenance, and checksums for external testing.
+- Read-only source-text viewing that rechecks the selected profile against its scan, plus scan progress.
+- Saved macOS 27.2 / 26B5112a reference, bringing the catalog to 23 snapshots and 5,953 profile records.
+- Digest-bound provenance qualifications in baseline details and specimen exports, preserving declared-unverified attribution, the Monterey version/build conflict, and unknown acquisition fields and release channels.
+
+### Fixed
+
+- Clear previous scan results and export eligibility when a rescan fails or a folder is rejected.
+- Reject specimen destinations inside scanned folders, including symlinked routes, and preserve exclusive output publication.
+
 ## [0.1.1] - 2026-10-07
 
 ### Changed

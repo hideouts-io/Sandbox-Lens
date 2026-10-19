@@ -2,15 +2,60 @@ import CryptoKit
 import Darwin
 import Foundation
 
+struct ScanProgress: Equatable, Sendable {
+    let processed: Int
+    let total: Int
+}
+
 struct ProfileScanner: Sendable {
     static let maximumProfileSizeBytes = 16 * 1_024 * 1_024
 
     func scan(roots: [ScanRoot]) async throws -> ScanResult {
-        try await Task.detached(priority: .userInitiated) {
+        try await scan(roots: roots) { _ in }
+    }
+
+    func scan(
+        roots: [ScanRoot],
+        progress: @escaping @Sendable (ScanProgress) async -> Void
+    ) async throws -> ScanResult {
+        let scanTask = Task.detached(priority: .userInitiated) {
             let startedAt = Date()
-            var profiles: [ScannedProfile] = []
+            var scopedURLs: [URL] = []
+            defer {
+                for url in scopedURLs.reversed() {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            var discovered: [(root: ScanRoot, urls: [URL])] = []
             for root in roots {
-                profiles.append(contentsOf: try scan(root: root))
+                try Task.checkCancellation()
+                var isDirectory: ObjCBool = false
+                guard FileManager.default.fileExists(atPath: root.url.path, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    throw ProfileScannerError.rootUnavailable(path: root.url.path)
+                }
+                if root.url.startAccessingSecurityScopedResource() {
+                    scopedURLs.append(root.url)
+                }
+                let urls = try enumerateProfileURLs(directoryURL: root.url)
+                guard !urls.isEmpty else {
+                    throw ProfileScannerError.noProfilesFound(path: root.url.path)
+                }
+                discovered.append((root: root, urls: urls))
+            }
+
+            let total = discovered.reduce(0) { count, entry in count + entry.urls.count }
+            await progress(ScanProgress(processed: 0, total: total))
+            var profiles: [ScannedProfile] = []
+            for entry in discovered {
+                for url in entry.urls {
+                    try Task.checkCancellation()
+                    profiles.append(try readProfile(fileURL: url, root: entry.root).profile)
+                    let processed = profiles.count
+                    if processed == 1 || processed.isMultiple(of: 16) || processed == total {
+                        await progress(ScanProgress(processed: processed, total: total))
+                    }
+                }
             }
             return ScanResult(
                 startedAt: startedAt,
@@ -18,7 +63,12 @@ struct ProfileScanner: Sendable {
                 roots: roots,
                 profiles: profiles.sorted { $0.relativePath < $1.relativePath }
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await scanTask.value
+        } onCancel: {
+            scanTask.cancel()
+        }
     }
 
     static func systemRoots() -> [ScanRoot] {
@@ -59,90 +109,144 @@ struct ProfileScanner: Sendable {
         }
     }
 
-    private func scan(root: ScanRoot) throws -> [ScannedProfile] {
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: root.url.path, isDirectory: &isDirectory),
-              isDirectory.boolValue else {
-            throw ProfileScannerError.rootUnavailable(path: root.url.path)
-        }
+    /// Reads source bytes and metadata using the same boundaries as a scan.
+    func readProfile(fileURL: URL, root: ScanRoot) throws -> (profile: ScannedProfile, data: Data) {
+        try Task.checkCancellation()
+        let profileURL = URL(fileURLWithPath: fileURL.path)
+        try validateResolvedPath(fileURL: profileURL, rootURL: root.url)
+        let data = try readProfileData(fileURL: profileURL, rootURL: root.url)
+        let resourceValues = try profileURL.resourceValues(
+            forKeys: [.isSymbolicLinkKey]
+        )
 
-        let accessed = root.url.startAccessingSecurityScopedResource()
-        defer {
-            if accessed {
-                root.url.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        let profileURLs = try enumerateProfileURLs(directoryURL: root.url)
-        guard !profileURLs.isEmpty else {
-            throw ProfileScannerError.noProfilesFound(path: root.url.path)
-        }
-
-        return try profileURLs.map { profileURL in
-            try validateResolvedPath(fileURL: profileURL, rootURL: root.url)
-            let resourceValues = try profileURL.resourceValues(
-                forKeys: [.fileSizeKey, .isSymbolicLinkKey]
-            )
-            if let fileSize = resourceValues.fileSize,
-               fileSize > Self.maximumProfileSizeBytes {
-                throw ProfileScannerError.profileTooLarge(
-                    path: profileURL.path,
-                    sizeBytes: fileSize,
-                    maximumBytes: Self.maximumProfileSizeBytes
-                )
-            }
-
-            let data: Data
+        let relativeComponent = try relativePath(fileURL: profileURL, rootURL: root.url)
+        let baselinePath = root.baselinePrefix + "/" + relativeComponent
+        let digest = Self.sha256(data: data)
+        let isSymbolicLink = resourceValues.isSymbolicLink == true
+        let symbolicLinkTarget: String?
+        if isSymbolicLink {
             do {
-                data = try Data(contentsOf: profileURL, options: [.mappedIfSafe])
+                symbolicLinkTarget = try FileManager.default.destinationOfSymbolicLink(
+                    atPath: profileURL.path
+                )
             } catch {
-                throw ProfileScannerError.readFailed(
+                throw ProfileScannerError.symbolicLinkReadFailed(
                     path: profileURL.path,
                     underlyingDescription: error.localizedDescription
                 )
             }
-            guard data.count <= Self.maximumProfileSizeBytes else {
-                throw ProfileScannerError.profileTooLarge(
-                    path: profileURL.path,
-                    sizeBytes: data.count,
-                    maximumBytes: Self.maximumProfileSizeBytes
+        } else {
+            symbolicLinkTarget = nil
+        }
+        try Task.checkCancellation()
+        let analysis = try ProfileTextAnalyzer.analyze(
+            data: data,
+            sourcePath: profileURL.path
+        )
+        let profile = ScannedProfile(
+            relativePath: baselinePath,
+            fileName: profileURL.lastPathComponent,
+            fileURL: profileURL,
+            sha256: digest,
+            sizeBytes: data.count,
+            isSymbolicLink: isSymbolicLink,
+            symbolicLinkTarget: symbolicLinkTarget,
+            analysis: analysis
+        )
+        try validateResolvedPath(fileURL: profileURL, rootURL: root.url)
+        return (profile, data)
+    }
+
+    static func sha256(data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func readProfileData(fileURL: URL, rootURL: URL) throws -> Data {
+        let rootPath = try canonicalExistingPath(url: rootURL)
+        let descriptor = fileURL.path.withCString { open($0, O_RDONLY | O_NONBLOCK | O_CLOEXEC) }
+        guard descriptor >= 0 else {
+            throw nativeReadError(path: fileURL.path, operation: "open", errnoValue: errno)
+        }
+
+        let data: Data
+        do {
+            data = try readProfileDescriptor(descriptor: descriptor, path: fileURL.path, rootPath: rootPath)
+        } catch {
+            let primaryError = error
+            guard close(descriptor) == 0 else {
+                let closeError = nativeReadError(path: fileURL.path, operation: "close", errnoValue: errno)
+                throw ProfileScannerError.readFailed(
+                    path: fileURL.path,
+                    underlyingDescription: "\(primaryError.localizedDescription) Descriptor cleanup also failed: \(closeError.localizedDescription)"
                 )
             }
+            throw primaryError
+        }
+        guard close(descriptor) == 0 else {
+            throw nativeReadError(path: fileURL.path, operation: "close", errnoValue: errno)
+        }
+        return data
+    }
 
-            let relativeComponent = try relativePath(fileURL: profileURL, rootURL: root.url)
-            let baselinePath = root.baselinePrefix + "/" + relativeComponent
-            let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-            let isSymbolicLink = resourceValues.isSymbolicLink == true
-            let symbolicLinkTarget: String?
-            if isSymbolicLink {
-                do {
-                    symbolicLinkTarget = try FileManager.default.destinationOfSymbolicLink(
-                        atPath: profileURL.path
-                    )
-                } catch {
-                    throw ProfileScannerError.symbolicLinkReadFailed(
-                        path: profileURL.path,
-                        underlyingDescription: error.localizedDescription
-                    )
-                }
-            } else {
-                symbolicLinkTarget = nil
-            }
-            let analysis = try ProfileTextAnalyzer.analyze(
-                data: data,
-                sourcePath: profileURL.path
-            )
-            return ScannedProfile(
-                relativePath: baselinePath,
-                fileName: profileURL.lastPathComponent,
-                fileURL: profileURL,
-                sha256: digest,
-                sizeBytes: data.count,
-                isSymbolicLink: isSymbolicLink,
-                symbolicLinkTarget: symbolicLinkTarget,
-                analysis: analysis
+    private func readProfileDescriptor(descriptor: Int32, path: String, rootPath: String) throws -> Data {
+        var metadata = stat()
+        guard fstat(descriptor, &metadata) == 0 else {
+            throw nativeReadError(path: path, operation: "fstat", errnoValue: errno)
+        }
+        guard metadata.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG) else {
+            throw ProfileScannerError.profileNotRegularFile(path: path)
+        }
+        guard metadata.st_size <= off_t(Self.maximumProfileSizeBytes) else {
+            throw ProfileScannerError.profileTooLarge(
+                path: path,
+                sizeBytes: Int(metadata.st_size),
+                maximumBytes: Self.maximumProfileSizeBytes
             )
         }
+        try validateDescriptorPath(descriptor: descriptor, path: path, rootPath: rootPath)
+
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 64 * 1_024)
+        while data.count <= Self.maximumProfileSizeBytes {
+            try Task.checkCancellation()
+            let capacity = min(buffer.count, Self.maximumProfileSizeBytes + 1 - data.count)
+            let count = buffer.withUnsafeMutableBytes { bytes in
+                Darwin.read(descriptor, bytes.baseAddress, capacity)
+            }
+            guard count >= 0 else {
+                throw nativeReadError(path: path, operation: "read", errnoValue: errno)
+            }
+            if count == 0 {
+                try validateDescriptorPath(descriptor: descriptor, path: path, rootPath: rootPath)
+                return data
+            }
+            data.append(contentsOf: buffer.prefix(count))
+        }
+        throw ProfileScannerError.profileTooLarge(
+            path: path,
+            sizeBytes: data.count,
+            maximumBytes: Self.maximumProfileSizeBytes
+        )
+    }
+
+    private func validateDescriptorPath(descriptor: Int32, path: String, rootPath: String) throws {
+        var buffer = [CChar](repeating: 0, count: Int(PATH_MAX))
+        let result = fcntl(descriptor, F_GETPATH, &buffer)
+        guard result == 0 else {
+            throw nativeReadError(path: path, operation: "fcntl(F_GETPATH)", errnoValue: errno)
+        }
+        let descriptorPath = decodePathBuffer(buffer: buffer)
+        let prefix = rootPath.hasSuffix("/") ? rootPath : rootPath + "/"
+        guard descriptorPath.hasPrefix(prefix) else {
+            throw ProfileScannerError.pathEscapedRoot(file: descriptorPath, root: rootPath)
+        }
+    }
+
+    private func nativeReadError(path: String, operation: String, errnoValue: Int32) -> ProfileScannerError {
+        ProfileScannerError.readFailed(
+            path: path,
+            underlyingDescription: "\(operation) failed: errno=\(errnoValue) (\(String(cString: strerror(errnoValue))))."
+        )
     }
 
     private func enumerateProfileURLs(directoryURL: URL) throws -> [URL] {
@@ -163,6 +267,7 @@ struct ProfileScanner: Sendable {
 
         var results: [URL] = []
         for entry in entries {
+            try Task.checkCancellation()
             let values = try entry.resourceValues(forKeys: keys)
             if values.isSymbolicLink == true {
                 if entry.pathExtension.lowercased() == "sb" {
@@ -247,6 +352,7 @@ enum ProfileScannerError: LocalizedError {
     case rootUnavailable(path: String)
     case folderTooBroad(path: String)
     case noProfilesFound(path: String)
+    case profileNotRegularFile(path: String)
     case profileTooLarge(path: String, sizeBytes: Int, maximumBytes: Int)
     case enumerationFailed(path: String, underlyingDescription: String)
     case readFailed(path: String, underlyingDescription: String)
@@ -262,6 +368,8 @@ enum ProfileScannerError: LocalizedError {
             "The selected folder is too broad to scan safely: \(path). Choose the folder that directly contains the .sb files. For Apple system profiles, use Scan This Mac instead."
         case .noProfilesFound(let path):
             "No .sb files were found inside \(path). Choose a folder that contains sandbox profiles, such as a copied folder named sandbox."
+        case .profileNotRegularFile(let path):
+            "The sandbox profile \(path) is not a regular file. Select a regular .sb file or a symbolic link to one within the scan root."
         case .profileTooLarge(let path, let sizeBytes, let maximumBytes):
             "The sandbox profile \(path) is \(sizeBytes) bytes, which exceeds the \(maximumBytes)-byte safety limit."
         case .enumerationFailed(let path, let underlyingDescription):

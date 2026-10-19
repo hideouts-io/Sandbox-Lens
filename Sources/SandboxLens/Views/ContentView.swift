@@ -9,13 +9,21 @@ struct ContentView: View {
     var body: some View {
         HSplitView {
             SidebarView(model: model)
-                .frame(minWidth: 190, idealWidth: 220, maxWidth: 260)
+                .frame(
+                    minWidth: 190,
+                    idealWidth: isProfileDestination ? 195 : 220,
+                    maxWidth: isProfileDestination ? 200 : 260
+                )
 
             middleColumn
-                .frame(minWidth: 310, idealWidth: 390, maxWidth: 480)
+                .frame(
+                    minWidth: 310,
+                    idealWidth: isProfileDestination ? 315 : 390,
+                    maxWidth: isProfileDestination ? 320 : 480
+                )
 
             detailColumn
-                .frame(minWidth: 430, maxWidth: .infinity)
+                .frame(minWidth: isProfileDestination ? 650 : 430, maxWidth: .infinity)
         }
         .navigationTitle("Sandbox Lens")
         .toolbar {
@@ -28,15 +36,40 @@ struct ContentView: View {
                 } label: {
                     Label("Scan This Mac", systemImage: "play.circle.fill")
                 }
-                .disabled(model.isScanning || model.catalog == nil)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
 
                 Button {
                     isShowingFolderGuide = true
                 } label: {
                     Label("Scan Copied Folder", systemImage: "folder.badge.plus")
                 }
-                .disabled(model.isScanning || model.catalog == nil)
+                .disabled(model.isScanning || model.isExporting || model.catalog == nil)
                 .help("Choose a folder that directly contains copied .sb files")
+                .accessibilityIdentifier("scan.copiedFolder")
+
+                Menu {
+                    Button("Runtime research specimen…") {
+                        Task {
+                            await model.exportRuntimeResearchSpecimen()
+                        }
+                    }
+                    .accessibilityIdentifier("export.runtimeResearchSpecimen")
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .accessibilityIdentifier("export.menu")
+                .disabled(!model.canExportRuntimeResearchSpecimen)
+                .help(model.runtimeSpecimenExportHelp)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let url = model.runtimeSpecimenExportURL {
+                Label("Exported specimen: \(url.path)", systemImage: "checkmark.circle")
+                    .font(.caption)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+                    .accessibilityIdentifier("export.runtimeResearchSpecimen.success")
             }
         }
         .fileImporter(
@@ -63,12 +96,21 @@ struct ContentView: View {
                 }
             )
         }
-        .alert("Sandbox Lens could not complete the scan", isPresented: errorPresented) {
+        .alert("Sandbox Lens could not complete the operation", isPresented: errorPresented) {
             Button("OK") {
                 model.errorMessage = nil
             }
         } message: {
             Text(model.errorMessage ?? "An unknown error occurred.")
+        }
+    }
+
+    private var isProfileDestination: Bool {
+        switch model.selectedDestination {
+        case .allProfiles, .changed, .missing, .unexpected:
+            return true
+        case .overview, .baselines, .learn:
+            return false
         }
     }
 
@@ -90,8 +132,15 @@ struct ContentView: View {
     private var detailColumn: some View {
         switch model.selectedDestination {
         case .allProfiles, .changed, .missing, .unexpected:
-            ProfileDetailView(comparison: model.selectedComparison, baseline: model.selectedBaseline) {
-                model.revealSelectedProfile()
+            HSplitView {
+                ProfileDetailView(comparison: model.visibleSelectedComparison, baseline: model.selectedBaseline) {
+                    model.revealSelectedProfile()
+                }
+                .frame(minWidth: 320, idealWidth: 400)
+
+                ProfileSourceView(comparison: model.visibleSelectedComparison, scan: model.scanResult)
+                    .id(model.visibleSelectedComparison?.id)
+                    .frame(minWidth: 320, idealWidth: 440)
             }
         case .baselines:
             BaselineDetailView(release: model.selectedBaseline)
@@ -110,6 +159,7 @@ struct ContentView: View {
             }
         }
         .pickerStyle(.menu)
+        .accessibilityIdentifier("baseline.picker")
         .help("Choose the exact macOS release and build when possible")
     }
 
@@ -179,6 +229,7 @@ private struct FolderScanGuide: View {
                 Button("Scan This Mac", action: scanMacAction)
                 Button("Choose Copied Folder…", action: chooseFolderAction)
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("scan.chooseCopiedFolder")
             }
         }
         .padding(24)

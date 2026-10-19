@@ -23,8 +23,10 @@ struct ComparisonListView: View {
                 List(model.filteredComparisons, selection: $model.selectedComparisonID) { comparison in
                     ComparisonRow(comparison: comparison)
                         .tag(Optional(comparison.id))
+                        .accessibilityIdentifier("profile.\(comparison.id)")
                 }
                 .listStyle(.inset)
+                .accessibilityIdentifier("profiles.list")
             }
         }
         .onChange(of: model.selectedDestination) { _ in
@@ -49,6 +51,7 @@ struct ComparisonListView: View {
             }
             TextField("Search profiles", text: $model.searchText)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("profiles.search")
         }
         .padding(16)
     }

@@ -41,6 +41,40 @@ final class ProfileScannerTests: XCTestCase {
         XCTAssertTrue(result.profiles[0].analysis.hasDenyDefault)
     }
 
+    func testProgressCountsAllRootsBeforeReadingProfiles() async throws {
+        let parent = try temporaryDirectory()
+        addTeardownBlock {
+            try FileManager.default.removeItem(at: parent)
+        }
+        let first = parent.appendingPathComponent("First", isDirectory: true)
+        let second = parent.appendingPathComponent("Second", isDirectory: true)
+        try FileManager.default.createDirectory(at: first, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: second, withIntermediateDirectories: true)
+        for fileURL in [
+            first.appendingPathComponent("one.sb"),
+            first.appendingPathComponent("two.sb"),
+            second.appendingPathComponent("three.sb")
+        ] {
+            try Data("(version 1)\n(deny default)\n".utf8).write(to: fileURL)
+        }
+        let roots = [
+            ScanRoot(url: first, baselinePrefix: "First", displayName: "First"),
+            ScanRoot(url: second, baselinePrefix: "Second", displayName: "Second")
+        ]
+        let recorder = ScanProgressRecorder()
+
+        let result = try await ProfileScanner().scan(roots: roots) { update in
+            await recorder.record(update)
+        }
+        let updates = await recorder.snapshot()
+
+        XCTAssertEqual(result.profiles.count, 3)
+        XCTAssertEqual(updates.first, ScanProgress(processed: 0, total: 3))
+        XCTAssertEqual(updates.last, ScanProgress(processed: 3, total: 3))
+        XCTAssertTrue(updates.allSatisfy { $0.total == 3 })
+        XCTAssertEqual(updates.map(\.processed), updates.map(\.processed).sorted())
+    }
+
     func testRejectsFolderWithoutProfiles() async throws {
         let root = try temporaryDirectory()
         addTeardownBlock {
@@ -178,5 +212,17 @@ final class ProfileScannerTests: XCTestCase {
             .appendingPathComponent("SandboxLensTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
+    }
+}
+
+private actor ScanProgressRecorder {
+    private var updates: [ScanProgress] = []
+
+    func record(_ progress: ScanProgress) {
+        updates.append(progress)
+    }
+
+    func snapshot() -> [ScanProgress] {
+        updates
     }
 }
