@@ -45,6 +45,7 @@ enum RuntimeSpecimenExporter {
         guard read.profile == scanned else {
             throw RuntimeSpecimenError.sourceMetadataChanged(path: scanned.fileURL.path)
         }
+        try validateDestinationOutsideScanRoots(destination: destination, roots: scan.roots)
 
         let manifest = RuntimeSpecimenManifest(
             schemaVersion: 1,
@@ -85,10 +86,11 @@ enum RuntimeSpecimenExporter {
         let checksums = files.map { file in
             "\(ProfileScanner.sha256(data: file.data))  \(file.name)\n"
         }.joined()
-        try publish(
+        let staged = try stage(
             files: files + [("sha256.txt", Data(checksums.utf8))],
             destination: destination
         )
+        try publish(staged: staged)
     }
 
     private static func sourceRoot(profile: ScannedProfile, roots: [ScanRoot]) throws -> ScanRoot {
@@ -105,8 +107,53 @@ enum RuntimeSpecimenExporter {
         return root
     }
 
-    /// Publishes only a complete folder, using an exclusive same-directory rename.
-    private static func publish(files: [(name: String, data: Data)], destination: URL) throws {
+    private static func validateDestinationOutsideScanRoots(destination: URL, roots: [ScanRoot]) throws {
+        let parentPath = try canonicalExistingPath(url: destination.deletingLastPathComponent())
+        let rootIdentities = try roots.map { root in
+            (url: root.url, identity: try directoryIdentity(url: root.url))
+        }
+        var ancestor = URL(fileURLWithPath: parentPath, isDirectory: true)
+        while true {
+            let identity = try directoryIdentity(url: ancestor)
+            if let root = rootIdentities.first(where: { $0.identity == identity }) {
+                throw RuntimeSpecimenError.destinationInsideScanRoot(
+                    path: destination.path,
+                    root: root.url.path
+                )
+            }
+            let next = ancestor.deletingLastPathComponent()
+            guard next.path != ancestor.path else {
+                return
+            }
+            ancestor = next
+        }
+    }
+
+    private static func canonicalExistingPath(url: URL) throws -> String {
+        var buffer = [CChar](repeating: 0, count: Int(PATH_MAX))
+        let result = url.path.withCString { pointer in
+            realpath(pointer, &buffer)
+        }
+        guard result != nil else {
+            throw RuntimeSpecimenError.pathResolutionFailed(path: url.path, errnoValue: errno)
+        }
+        let bytes = buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+        return String(decoding: bytes, as: UTF8.self)
+    }
+
+    private static func directoryIdentity(url: URL) throws -> DirectoryIdentity {
+        var entry = stat()
+        let result = url.path.withCString { pointer in
+            stat(pointer, &entry)
+        }
+        guard result == 0 else {
+            throw RuntimeSpecimenError.pathResolutionFailed(path: url.path, errnoValue: errno)
+        }
+        return DirectoryIdentity(device: entry.st_dev, inode: entry.st_ino)
+    }
+
+    /// Assembles an unpublished folder. The caller must publish it or remove it.
+    static func stage(files: [(name: String, data: Data)], destination: URL) throws -> StagedRuntimeSpecimen {
         var entry = stat()
         let result = destination.path.withCString { lstat($0, &entry) }
         if result == 0 {
@@ -138,31 +185,39 @@ enum RuntimeSpecimenExporter {
                     throw RuntimeSpecimenError.writeFailed(path: output.path, reason: error.localizedDescription)
                 }
             }
-            let renameResult = staging.path.withCString { source in
-                destination.path.withCString { target in
-                    renamex_np(source, target, UInt32(RENAME_EXCL))
-                }
-            }
-            guard renameResult == 0 else {
-                let renameError = errno
-                if renameError == EEXIST {
-                    throw RuntimeSpecimenError.destinationExists(path: destination.path)
-                }
-                throw RuntimeSpecimenError.publishFailed(path: destination.path, errnoValue: renameError)
-            }
         } catch {
-            let primaryError = error
-            do {
-                try FileManager.default.removeItem(at: staging)
-            } catch {
-                throw RuntimeSpecimenError.cleanupFailed(
-                    path: staging.path,
-                    primaryReason: primaryError.localizedDescription,
-                    cleanupReason: error.localizedDescription
-                )
-            }
-            throw primaryError
+            try rethrowAfterCleanup(staging: staging, primaryError: error)
         }
+        return StagedRuntimeSpecimen(directory: staging, destination: destination)
+    }
+
+    /// Consumes completed staging with an exclusive rename; failures clean up staging.
+    static func publish(staged: StagedRuntimeSpecimen) throws {
+        let renameResult = staged.directory.path.withCString { source in
+            staged.destination.path.withCString { target in
+                renamex_np(source, target, UInt32(RENAME_EXCL))
+            }
+        }
+        guard renameResult == 0 else {
+            let renameError = errno
+            let primaryError: RuntimeSpecimenError = renameError == EEXIST
+                ? .destinationExists(path: staged.destination.path)
+                : .publishFailed(path: staged.destination.path, errnoValue: renameError)
+            try rethrowAfterCleanup(staging: staged.directory, primaryError: primaryError)
+        }
+    }
+
+    private static func rethrowAfterCleanup(staging: URL, primaryError: Error) throws -> Never {
+        do {
+            try FileManager.default.removeItem(at: staging)
+        } catch {
+            throw RuntimeSpecimenError.cleanupFailed(
+                path: staging.path,
+                primaryReason: primaryError.localizedDescription,
+                cleanupReason: error.localizedDescription
+            )
+        }
+        throw primaryError
     }
 
     private static var readme: String {
@@ -228,6 +283,17 @@ enum RuntimeSpecimenExporter {
     }
 }
 
+private struct DirectoryIdentity: Equatable {
+    let device: dev_t
+    let inode: ino_t
+}
+
+/// Internal ownership of a complete, unpublished specimen; not a resumable export API.
+struct StagedRuntimeSpecimen {
+    let directory: URL
+    let destination: URL
+}
+
 enum RuntimeSpecimenError: LocalizedError {
     case sourceUnavailable
     case sourceNotInScan(path: String)
@@ -236,7 +302,9 @@ enum RuntimeSpecimenError: LocalizedError {
     case sourceMetadataChanged(path: String)
     case invalidAppMetadata(key: String, bundlePath: String)
     case destinationExists(path: String)
+    case destinationInsideScanRoot(path: String, root: String)
     case destinationUnavailable(path: String, errnoValue: Int32)
+    case pathResolutionFailed(path: String, errnoValue: Int32)
     case writeFailed(path: String, reason: String)
     case publishFailed(path: String, errnoValue: Int32)
     case cleanupFailed(path: String, primaryReason: String, cleanupReason: String)
@@ -257,8 +325,12 @@ enum RuntimeSpecimenError: LocalizedError {
             "App metadata \(key) must be a nonempty string in \(bundlePath). Rebuild the app bundle before exporting."
         case .destinationExists(let path):
             "The export destination already exists: \(path). Choose a new folder name; existing files are never replaced."
+        case .destinationInsideScanRoot(let path, let root):
+            "The export destination \(path) is inside the scanned folder \(root). Choose a folder outside every scanned location."
         case .destinationUnavailable(let path, let errnoValue):
             "The export destination \(path) could not be inspected: errno=\(errnoValue) (\(String(cString: strerror(errnoValue))))."
+        case .pathResolutionFailed(let path, let errnoValue):
+            "The export path \(path) could not be resolved: errno=\(errnoValue) (\(String(cString: strerror(errnoValue)))). Check that the scanned folder and export parent still exist, then scan again."
         case .writeFailed(let path, let reason):
             "The specimen could not be written at \(path): \(reason) No completed export was published."
         case .publishFailed(let path, let errnoValue):

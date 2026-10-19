@@ -7,7 +7,27 @@ struct OverviewView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 hero
-                if let scanResult = model.scanResult {
+                if model.isScanning {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let progress = model.scanProgress {
+                            ProgressView(
+                                value: Double(progress.processed),
+                                total: Double(progress.total)
+                            ) {
+                                Text("Scanning sandbox profiles…")
+                            }
+                            .accessibilityIdentifier("scan.progress")
+                            Text("\(progress.processed.formatted()) of \(progress.total.formatted()) profiles read")
+                                .font(.callout.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("scan.progressCount")
+                        } else {
+                            ProgressView("Finding sandbox profiles…")
+                                .accessibilityIdentifier("scan.discovering")
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else if let scanResult = model.scanResult {
                     verdictBanner(scanResult: scanResult)
                     summaryGrid
                 } else {
@@ -99,6 +119,15 @@ struct OverviewView: View {
                 message: "No reference version is selected. The files were inventoried, but the app cannot determine whether they match an expected macOS release.",
                 symbol: "questionmark.circle.fill",
                 color: .secondary
+            )
+        }
+
+        if scanResult.roots.contains(where: { $0.baselinePrefix == "Imported" }) {
+            return ScanVerdict(
+                title: "Copied folder comparison needs context",
+                message: "The selected files were compared with \(baseline.displayName). Sandbox Lens has not verified the copied folder's release or build. Missing counts may include profiles outside the folder you chose.",
+                symbol: "info.circle.fill",
+                color: .blue
             )
         }
 

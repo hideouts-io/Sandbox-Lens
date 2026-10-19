@@ -36,18 +36,23 @@ Exercise the complete release path:
 
 ## Current coverage
 
-The Swift suite contains 32 tests covering:
+The Swift suite contains 43 tests covering:
 
 - bundled catalog decoding and expected corpus totals;
 - match, different, missing, additional, and symlink classifications;
 - search and category filtering;
 - export eligibility for visible selected sources across navigation, filtering, and baseline-only rows;
 - recursive read-only scanning;
+- scan progress across multiple roots and verified source-text viewing after selection;
+- a failed rescan clearing the previous scan verdict;
 - rejection of broad, empty, oversized, unreadable, disappeared, and escaping-symlink inputs;
 - UTF-8 validation and broad marker extraction;
 - comment handling, quoted semicolons, Unicode, whitespace, and malformed-but-readable text;
 - exact macOS version formatting, including zero patch versions;
-- specimen export byte integrity, checksums, separate provenance, unavailable sources, changed links, and output failures.
+- specimen export byte integrity, checksums, separate provenance, unavailable sources, changed links, scan-root destination rejection, and output failures;
+- cleanup after a real exclusive-write collision following a successful payload write, a destination created between staging and publication, and permission-denied cleanup retaining the primary publication failure.
+
+The cleanup-permission case requires an unprivileged macOS user and is explicitly skipped under root. These filesystem cases do not establish disk-full or partial-file-write behavior.
 
 Two Python tests independently cover comment stripping in the baseline generator. The repository check validates ignored corpus boundaries, detects likely credentials and user-specific absolute paths, validates release uniqueness and profile totals, and fails without exposing matched values.
 

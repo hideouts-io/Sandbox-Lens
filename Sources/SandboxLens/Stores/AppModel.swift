@@ -16,12 +16,14 @@ final class AppModel: ObservableObject {
     @Published var selectedDestination: SidebarDestination = .overview
     @Published var searchText = ""
     @Published private(set) var isScanning = false
+    @Published private(set) var scanProgress: ScanProgress?
     @Published private(set) var isExporting = false
     @Published private(set) var runtimeSpecimenExportURL: URL?
     @Published var errorMessage: String?
 
     private let scanner = ProfileScanner()
     private var didBootstrap = false
+    private var activeScanID: UUID?
 
     init() {
         selectedBaselineID = nil
@@ -126,6 +128,9 @@ final class AppModel: ObservableObject {
             try ProfileScanner.validateImportedFolderURL(url: url)
             await scan(roots: [ProfileScanner.importedRoot(url: url)])
         } catch {
+            if !isScanning {
+                resetScanPresentation()
+            }
             errorMessage = error.localizedDescription
         }
     }
@@ -266,21 +271,52 @@ final class AppModel: ObservableObject {
     }
 
     private func scan(roots: [ScanRoot]) async {
+        let scanID = UUID()
+        activeScanID = scanID
         isScanning = true
-        errorMessage = nil
-        runtimeSpecimenExportURL = nil
+        resetScanPresentation()
         defer {
-            isScanning = false
+            if activeScanID == scanID {
+                isScanning = false
+                scanProgress = nil
+                activeScanID = nil
+            }
         }
 
         do {
-            scanResult = try await scanner.scan(roots: roots)
+            let result = try await scanner.scan(roots: roots) { progress in
+                await MainActor.run {
+                    if self.activeScanID == scanID {
+                        self.scanProgress = progress
+                    }
+                }
+            }
+            guard activeScanID == scanID else {
+                return
+            }
+            scanResult = result
             recomputeComparisons()
-            selectedDestination = .overview
             selectedComparisonID = comparisons.first(where: { $0.status != .match })?.id ?? comparisons.first?.id
+            errorMessage = nil
+        } catch is CancellationError {
+            if activeScanID == scanID {
+                errorMessage = "The scan was canceled before all profiles were read. Start the scan again."
+            }
         } catch {
-            errorMessage = error.localizedDescription
+            if activeScanID == scanID {
+                errorMessage = error.localizedDescription
+            }
         }
+    }
+
+    private func resetScanPresentation() {
+        scanProgress = nil
+        scanResult = nil
+        comparisons = []
+        selectedComparisonID = nil
+        selectedDestination = .overview
+        errorMessage = nil
+        runtimeSpecimenExportURL = nil
     }
 
     private func recomputeComparisons() {

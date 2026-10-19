@@ -43,7 +43,8 @@ The bundled catalog currently contains **22 build-specific snapshots and 5,342 p
 - Search across filename, path, and status.
 - Narrow static summaries for defaults, broad file/network/process rules, imports, and `no-sandbox` markers.
 - Source URL, source revision, build, channel, confidence, and hash details for each reference.
-- Runtime research specimen export with original bytes, static provenance, and checksums for external testing.
+- Read-only source-text viewing and scan progress in source builds.
+- Runtime research specimen export in source builds with original bytes, static provenance, and checksums for external testing.
 - Local, read-only scanning; explicit exports create a new folder without modifying source profiles. No uploads, policy execution, compilation, or remediation.
 
 ## Start here
@@ -56,7 +57,7 @@ The bundled catalog currently contains **22 build-specific snapshots and 5,342 p
 
 For exported profiles, click **Scan Copied Folder** and choose the folder that directly contains the copied `.sb` files. Do not choose `/`, `/System`, or another broad system directory.
 
-For external runtime research, open **All profiles** or a finding list, inspect a selected scanned profile, and choose **Export → Runtime research specimen…**. The save panel identifies the source path, scan fingerprint, and selected baseline independently of the new folder name. Export is unavailable outside a profile list or when the selection is hidden by a filter. The export contains `profile.sb`, `manifest.json`, `sha256.txt`, and `README.txt`; the included README explains the researcher-managed handoff to PolicyWitness. Export does not compile or execute a policy. Missing and baseline-only rows have no source bytes to export.
+The published v0.1.1 release does not include runtime research specimen export; build the current source to use it. For external runtime research, open **All profiles** or a finding list, inspect a selected scanned profile, and choose **Export → Runtime research specimen…**. The save panel identifies the source path, scan fingerprint, and selected baseline independently of the new folder name. Choose a destination outside the scanned folders. Export is unavailable outside a profile list or when the selection is hidden by a filter. The export contains `profile.sb`, `manifest.json`, `sha256.txt`, and `README.txt`; the included README explains the researcher-managed handoff to PolicyWitness. Export does not compile or execute a policy. Missing and baseline-only rows have no source bytes to export.
 
 ## Screenshots
 

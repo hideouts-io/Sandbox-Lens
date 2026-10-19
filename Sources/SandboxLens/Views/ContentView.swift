@@ -9,13 +9,21 @@ struct ContentView: View {
     var body: some View {
         HSplitView {
             SidebarView(model: model)
-                .frame(minWidth: 190, idealWidth: 220, maxWidth: 260)
+                .frame(
+                    minWidth: 190,
+                    idealWidth: isProfileDestination ? 195 : 220,
+                    maxWidth: isProfileDestination ? 200 : 260
+                )
 
             middleColumn
-                .frame(minWidth: 310, idealWidth: 390, maxWidth: 480)
+                .frame(
+                    minWidth: 310,
+                    idealWidth: isProfileDestination ? 315 : 390,
+                    maxWidth: isProfileDestination ? 320 : 480
+                )
 
             detailColumn
-                .frame(minWidth: 430, maxWidth: .infinity)
+                .frame(minWidth: isProfileDestination ? 650 : 430, maxWidth: .infinity)
         }
         .navigationTitle("Sandbox Lens")
         .toolbar {
@@ -97,6 +105,15 @@ struct ContentView: View {
         }
     }
 
+    private var isProfileDestination: Bool {
+        switch model.selectedDestination {
+        case .allProfiles, .changed, .missing, .unexpected:
+            return true
+        case .overview, .baselines, .learn:
+            return false
+        }
+    }
+
     @ViewBuilder
     private var middleColumn: some View {
         switch model.selectedDestination {
@@ -115,8 +132,15 @@ struct ContentView: View {
     private var detailColumn: some View {
         switch model.selectedDestination {
         case .allProfiles, .changed, .missing, .unexpected:
-            ProfileDetailView(comparison: model.visibleSelectedComparison, baseline: model.selectedBaseline) {
-                model.revealSelectedProfile()
+            HSplitView {
+                ProfileDetailView(comparison: model.visibleSelectedComparison, baseline: model.selectedBaseline) {
+                    model.revealSelectedProfile()
+                }
+                .frame(minWidth: 320, idealWidth: 400)
+
+                ProfileSourceView(comparison: model.visibleSelectedComparison, scan: model.scanResult)
+                    .id(model.visibleSelectedComparison?.id)
+                    .frame(minWidth: 320, idealWidth: 440)
             }
         case .baselines:
             BaselineDetailView(release: model.selectedBaseline)

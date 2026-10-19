@@ -62,6 +62,7 @@ struct ProfileDetailView: View {
                 if comparison.status != .match {
                     Text("This result describes a file comparison. It does not establish that the rule was loaded, triggered, or used maliciously.")
                         .font(.callout.weight(.medium))
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 3)
                 }
             }

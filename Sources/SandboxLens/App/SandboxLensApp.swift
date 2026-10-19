@@ -16,7 +16,7 @@ struct SandboxLensApp: App {
     var body: some Scene {
         WindowGroup("Sandbox Lens", id: "main") {
             ContentView(model: model)
-                .frame(minWidth: 1060, minHeight: 680)
+                .frame(minWidth: 1200, minHeight: 680)
                 .task {
                     await model.bootstrap()
                 }

@@ -1,4 +1,5 @@
 import CryptoKit
+import Darwin
 import XCTest
 @testable import SandboxLens
 
@@ -12,7 +13,8 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         let comparison = try XCTUnwrap(
             ComparisonEngine.compare(scannedProfiles: fixture.scan.profiles, baseline: baseline).first
         )
-        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let exportRoot = try temporaryDirectory()
+        let destination = exportRoot.appendingPathComponent("specimen", isDirectory: true)
         let host = SystemIdentity(productVersion: "26.1", buildVersion: "HOST-BUILD")
         let app = RuntimeSpecimenAppIdentity(
             bundleIdentifier: "io.hideouts.SandboxLens",
@@ -86,7 +88,8 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
     func testExportsUnavailableFactsAsExplicitNull() async throws {
         let root = try temporaryDirectory()
         let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n(deny default)\n".utf8))
-        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let exportRoot = try temporaryDirectory()
+        let destination = exportRoot.appendingPathComponent("specimen", isDirectory: true)
 
         try exportUnverified(fixture: fixture, destination: destination)
 
@@ -104,6 +107,63 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         XCTAssertTrue(unavailable.app.bundleIdentifierIsNull)
         XCTAssertTrue(unavailable.app.versionIsNull)
         XCTAssertTrue(unavailable.app.buildIsNull)
+    }
+
+    func testRejectsExportInsideScannedFolderAndPreservesRescan() async throws {
+        let root = try temporaryDirectory()
+        let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n(deny default)\n".utf8))
+        let nested = root.appendingPathComponent("Nested", isDirectory: true)
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: false)
+
+        for destination in [
+            root.appendingPathComponent("specimen", isDirectory: true),
+            nested.appendingPathComponent("specimen", isDirectory: true)
+        ] {
+            XCTAssertThrowsError(try exportUnverified(fixture: fixture, destination: destination)) { error in
+                guard case RuntimeSpecimenError.destinationInsideScanRoot(let path, let capturedRoot) = error else {
+                    return XCTFail("Unexpected export error: \(error)")
+                }
+                XCTAssertEqual(path, destination.path)
+                XCTAssertEqual(capturedRoot, root.path)
+            }
+            XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path))
+        }
+
+        let rescanned = try await ProfileScanner().scan(roots: [ProfileScanner.importedRoot(url: root)])
+        XCTAssertEqual(rescanned.profiles, fixture.scan.profiles)
+    }
+
+    func testRejectsDestinationThroughSymlinkedParent() async throws {
+        let parent = try temporaryDirectory()
+        let root = parent.appendingPathComponent("Scan", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+        let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n".utf8))
+        let alias = parent.appendingPathComponent("ScanAlias", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: root)
+
+        let viaAlias = alias.appendingPathComponent("specimen", isDirectory: true)
+        XCTAssertThrowsError(try exportUnverified(fixture: fixture, destination: viaAlias)) { error in
+            guard case RuntimeSpecimenError.destinationInsideScanRoot = error else {
+                return XCTFail("Unexpected export error: \(error)")
+            }
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: viaAlias.path))
+    }
+
+    func testAllowsSiblingDestinationWithSimilarFolderName() async throws {
+        let parent = try temporaryDirectory()
+        let root = parent.appendingPathComponent("Scan", isDirectory: true)
+        let exportRoot = parent.appendingPathComponent("Scan-exports", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+        try FileManager.default.createDirectory(at: exportRoot, withIntermediateDirectories: false)
+        let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n".utf8))
+        let destination = exportRoot.appendingPathComponent("specimen", isDirectory: true)
+
+        try exportUnverified(fixture: fixture, destination: destination)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destination.appendingPathComponent("profile.sb").path))
+        let rescanned = try await ProfileScanner().scan(roots: [ProfileScanner.importedRoot(url: root)])
+        XCTAssertEqual(rescanned.profiles, fixture.scan.profiles)
     }
 
     func testRejectsBaselineOnlySelectionWithoutCreatingOutput() async throws {
@@ -193,7 +253,8 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         try FileManager.default.createSymbolicLink(atPath: source.path, withDestinationPath: "target.txt")
         let scan = try await ProfileScanner().scan(roots: [ProfileScanner.importedRoot(url: root)])
         let fixture = ExportFixture(source: source, scan: scan)
-        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let exportRoot = try temporaryDirectory()
+        let destination = exportRoot.appendingPathComponent("specimen", isDirectory: true)
 
         try exportUnverified(fixture: fixture, destination: destination)
 
@@ -211,7 +272,7 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         try bytes.write(to: replacement)
         try FileManager.default.removeItem(at: source)
         try FileManager.default.createSymbolicLink(atPath: source.path, withDestinationPath: "replacement.txt")
-        let retargetedDestination = root.appendingPathComponent("retargeted-specimen", isDirectory: true)
+        let retargetedDestination = exportRoot.appendingPathComponent("retargeted-specimen", isDirectory: true)
         XCTAssertThrowsError(try exportUnverified(fixture: fixture, destination: retargetedDestination)) { error in
             guard case RuntimeSpecimenError.sourceMetadataChanged = error else {
                 return XCTFail("Unexpected export error: \(error)")
@@ -219,14 +280,15 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         }
         XCTAssertFalse(FileManager.default.fileExists(atPath: retargetedDestination.path))
         XCTAssertEqual(Set(try FileManager.default.contentsOfDirectory(atPath: root.path)), [
-            "synthetic.sb", "target.txt", "replacement.txt", "specimen"
+            "synthetic.sb", "target.txt", "replacement.txt"
         ])
     }
 
     func testKeepsExistingDestinationUnchanged() async throws {
         let root = try temporaryDirectory()
         let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n".utf8))
-        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let exportRoot = try temporaryDirectory()
+        let destination = exportRoot.appendingPathComponent("specimen", isDirectory: true)
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
         let sentinel = destination.appendingPathComponent("keep.txt")
         let sentinelBytes = Data("Existing research output\n".utf8)
@@ -240,13 +302,14 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         }
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: destination.path), ["keep.txt"])
         XCTAssertEqual(try Data(contentsOf: sentinel), sentinelBytes)
-        XCTAssertEqual(Set(try FileManager.default.contentsOfDirectory(atPath: root.path)), ["synthetic.sb", "specimen"])
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), ["synthetic.sb"])
     }
 
     func testWriteFailureLeavesNoCompletedOutputOrTemporaryFolder() async throws {
         let root = try temporaryDirectory()
         let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n".utf8))
-        let parent = root.appendingPathComponent("read-only", isDirectory: true)
+        let exportRoot = try temporaryDirectory()
+        let parent = exportRoot.appendingPathComponent("read-only", isDirectory: true)
         try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: false)
         addTeardownBlock {
             try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: parent.path)
@@ -262,6 +325,104 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: parent.path)
         XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path))
         XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: parent.path).isEmpty)
+    }
+
+    func testExclusiveWriteCollisionAfterPayloadWriteCleansStaging() throws {
+        let root = try temporaryDirectory()
+        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let bytes = Data("Synthetic source bytes\n".utf8)
+
+        // The second exclusive write can collide only after the first creates the payload.
+        do {
+            _ = try RuntimeSpecimenExporter.stage(
+                files: [("profile.sb", bytes), ("profile.sb", Data("Replacement bytes\n".utf8))],
+                destination: destination
+            )
+            return XCTFail("Staging did not reject a duplicate payload filename.")
+        } catch {
+            guard case RuntimeSpecimenError.writeFailed(let path, let reason) = error else {
+                return XCTFail("Unexpected staging error: \(error)")
+            }
+            let output = URL(fileURLWithPath: path)
+            let staging = output.deletingLastPathComponent()
+            XCTAssertEqual(output.lastPathComponent, "profile.sb")
+            XCTAssertTrue(staging.lastPathComponent.hasPrefix(".SandboxLens-specimen-"))
+            XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: root.path).isEmpty)
+
+            // Recreate the removed path so the native collision control has identical context.
+            try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: false)
+            try bytes.write(to: output, options: [.withoutOverwriting])
+            XCTAssertThrowsError(try Data("Replacement bytes\n".utf8).write(to: output, options: [.withoutOverwriting])) { collision in
+                XCTAssertEqual(reason, collision.localizedDescription)
+            }
+            XCTAssertEqual(try Data(contentsOf: output), bytes)
+            try FileManager.default.removeItem(at: staging)
+        }
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path))
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: root.path).isEmpty)
+    }
+
+    func testKeepsDestinationCreatedAfterStagingUnchanged() throws {
+        let root = try temporaryDirectory()
+        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let bytes = Data("Synthetic source bytes\n".utf8)
+        let staged = try RuntimeSpecimenExporter.stage(files: [("profile.sb", bytes)], destination: destination)
+        XCTAssertEqual(try Data(contentsOf: staged.directory.appendingPathComponent("profile.sb")), bytes)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path))
+
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let sentinel = destination.appendingPathComponent("keep.txt")
+        let sentinelBytes = Data("Competing research output\n".utf8)
+        try sentinelBytes.write(to: sentinel)
+
+        XCTAssertThrowsError(try RuntimeSpecimenExporter.publish(staged: staged)) { error in
+            guard case RuntimeSpecimenError.destinationExists(let path) = error else {
+                return XCTFail("Unexpected publication error: \(error)")
+            }
+            XCTAssertEqual(path, destination.path)
+        }
+
+        XCTAssertEqual(try Data(contentsOf: sentinel), sentinelBytes)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: destination.path), ["keep.txt"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staged.directory.path))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), ["specimen"])
+    }
+
+    func testCleanupFailureRetainsPublicationFailureAndCompetingOutput() throws {
+        guard geteuid() != 0 else {
+            throw XCTSkip("Cleanup permission rejection requires an unprivileged macOS user.")
+        }
+        let root = try temporaryDirectory()
+        let destination = root.appendingPathComponent("specimen", isDirectory: true)
+        let bytes = Data("Synthetic source bytes\n".utf8)
+        let staged = try RuntimeSpecimenExporter.stage(files: [("profile.sb", bytes)], destination: destination)
+        addTeardownBlock {
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: staged.directory.path)
+        }
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: staged.directory.path)
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let sentinel = destination.appendingPathComponent("keep.txt")
+        let sentinelBytes = Data("Competing research output\n".utf8)
+        try sentinelBytes.write(to: sentinel)
+
+        XCTAssertThrowsError(try RuntimeSpecimenExporter.publish(staged: staged)) { error in
+            guard case RuntimeSpecimenError.cleanupFailed(let path, let primaryReason, let cleanupReason) = error else {
+                return XCTFail("Unexpected cleanup error: \(error)")
+            }
+            XCTAssertEqual(path, staged.directory.path)
+            XCTAssertEqual(primaryReason, RuntimeSpecimenError.destinationExists(path: destination.path).localizedDescription)
+            XCTAssertFalse(cleanupReason.isEmpty)
+            XCTAssertTrue(error.localizedDescription.contains(primaryReason))
+            XCTAssertTrue(error.localizedDescription.contains(cleanupReason))
+        }
+
+        XCTAssertEqual(try Data(contentsOf: staged.directory.appendingPathComponent("profile.sb")), bytes)
+        XCTAssertEqual(try Data(contentsOf: sentinel), sentinelBytes)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: destination.path), ["keep.txt"])
+        XCTAssertEqual(Set(try FileManager.default.contentsOfDirectory(atPath: root.path)), [
+            staged.directory.lastPathComponent, "specimen"
+        ])
     }
 
     private func temporaryDirectory() throws -> URL {

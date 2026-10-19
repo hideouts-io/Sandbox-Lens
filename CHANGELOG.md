@@ -4,6 +4,16 @@ All notable user-facing changes are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Runtime research specimen export with verified source bytes, static provenance, and checksums for external testing.
+- Read-only source-text viewing that rechecks the selected profile against its scan, plus scan progress.
+
+### Fixed
+
+- Clear previous scan results and export eligibility when a rescan fails or a folder is rejected.
+- Reject specimen destinations inside scanned folders, including symlinked routes, and preserve exclusive output publication.
+
 ## [0.1.1] - 2026-10-07
 
 ### Changed

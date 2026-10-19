@@ -51,6 +51,7 @@ struct ComparisonListView: View {
             }
             TextField("Search profiles", text: $model.searchText)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("profiles.search")
         }
         .padding(16)
     }

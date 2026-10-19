@@ -2,15 +2,60 @@ import CryptoKit
 import Darwin
 import Foundation
 
+struct ScanProgress: Equatable, Sendable {
+    let processed: Int
+    let total: Int
+}
+
 struct ProfileScanner: Sendable {
     static let maximumProfileSizeBytes = 16 * 1_024 * 1_024
 
     func scan(roots: [ScanRoot]) async throws -> ScanResult {
-        try await Task.detached(priority: .userInitiated) {
+        try await scan(roots: roots) { _ in }
+    }
+
+    func scan(
+        roots: [ScanRoot],
+        progress: @escaping @Sendable (ScanProgress) async -> Void
+    ) async throws -> ScanResult {
+        let scanTask = Task.detached(priority: .userInitiated) {
             let startedAt = Date()
-            var profiles: [ScannedProfile] = []
+            var scopedURLs: [URL] = []
+            defer {
+                for url in scopedURLs.reversed() {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            var discovered: [(root: ScanRoot, urls: [URL])] = []
             for root in roots {
-                profiles.append(contentsOf: try scan(root: root))
+                try Task.checkCancellation()
+                var isDirectory: ObjCBool = false
+                guard FileManager.default.fileExists(atPath: root.url.path, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    throw ProfileScannerError.rootUnavailable(path: root.url.path)
+                }
+                if root.url.startAccessingSecurityScopedResource() {
+                    scopedURLs.append(root.url)
+                }
+                let urls = try enumerateProfileURLs(directoryURL: root.url)
+                guard !urls.isEmpty else {
+                    throw ProfileScannerError.noProfilesFound(path: root.url.path)
+                }
+                discovered.append((root: root, urls: urls))
+            }
+
+            let total = discovered.reduce(0) { count, entry in count + entry.urls.count }
+            await progress(ScanProgress(processed: 0, total: total))
+            var profiles: [ScannedProfile] = []
+            for entry in discovered {
+                for url in entry.urls {
+                    try Task.checkCancellation()
+                    profiles.append(try readProfile(fileURL: url, root: entry.root).profile)
+                    let processed = profiles.count
+                    if processed == 1 || processed.isMultiple(of: 16) || processed == total {
+                        await progress(ScanProgress(processed: processed, total: total))
+                    }
+                }
             }
             return ScanResult(
                 startedAt: startedAt,
@@ -18,7 +63,12 @@ struct ProfileScanner: Sendable {
                 roots: roots,
                 profiles: profiles.sorted { $0.relativePath < $1.relativePath }
             )
-        }.value
+        }
+        return try await withTaskCancellationHandler {
+            try await scanTask.value
+        } onCancel: {
+            scanTask.cancel()
+        }
     }
 
     static func systemRoots() -> [ScanRoot] {
@@ -59,32 +109,9 @@ struct ProfileScanner: Sendable {
         }
     }
 
-    private func scan(root: ScanRoot) throws -> [ScannedProfile] {
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: root.url.path, isDirectory: &isDirectory),
-              isDirectory.boolValue else {
-            throw ProfileScannerError.rootUnavailable(path: root.url.path)
-        }
-
-        let accessed = root.url.startAccessingSecurityScopedResource()
-        defer {
-            if accessed {
-                root.url.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        let profileURLs = try enumerateProfileURLs(directoryURL: root.url)
-        guard !profileURLs.isEmpty else {
-            throw ProfileScannerError.noProfilesFound(path: root.url.path)
-        }
-
-        return try profileURLs.map { profileURL in
-            try readProfile(fileURL: profileURL, root: root).profile
-        }
-    }
-
     /// Reads source bytes and metadata using the same boundaries as a scan.
     func readProfile(fileURL: URL, root: ScanRoot) throws -> (profile: ScannedProfile, data: Data) {
+        try Task.checkCancellation()
         let profileURL = URL(fileURLWithPath: fileURL.path)
         try validateResolvedPath(fileURL: profileURL, rootURL: root.url)
         let data = try readProfileData(fileURL: profileURL, rootURL: root.url)
@@ -111,6 +138,7 @@ struct ProfileScanner: Sendable {
         } else {
             symbolicLinkTarget = nil
         }
+        try Task.checkCancellation()
         let analysis = try ProfileTextAnalyzer.analyze(
             data: data,
             sourcePath: profileURL.path
@@ -180,6 +208,7 @@ struct ProfileScanner: Sendable {
         var data = Data()
         var buffer = [UInt8](repeating: 0, count: 64 * 1_024)
         while data.count <= Self.maximumProfileSizeBytes {
+            try Task.checkCancellation()
             let capacity = min(buffer.count, Self.maximumProfileSizeBytes + 1 - data.count)
             let count = buffer.withUnsafeMutableBytes { bytes in
                 Darwin.read(descriptor, bytes.baseAddress, capacity)
@@ -238,6 +267,7 @@ struct ProfileScanner: Sendable {
 
         var results: [URL] = []
         for entry in entries {
+            try Task.checkCancellation()
             let values = try entry.resourceValues(forKeys: keys)
             if values.isSymbolicLink == true {
                 if entry.pathExtension.lowercased() == "sb" {

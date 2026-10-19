@@ -89,6 +89,39 @@ final class RuntimeSpecimenSelectionTests: XCTestCase {
         XCTAssertTrue(model.canExportRuntimeResearchSpecimen)
     }
 
+    func testFailedRescanDoesNotShowPreviousScanResults() async throws {
+        let scannedFolder = try temporaryDirectory()
+        let model = try await scannedModel(root: scannedFolder)
+        XCTAssertNotNil(model.scanResult)
+
+        let emptyFolder = try temporaryDirectory()
+        await model.scanFolder(url: emptyFolder)
+
+        XCTAssertNotNil(model.errorMessage)
+        XCTAssertNil(model.scanResult)
+        XCTAssertTrue(model.comparisons.isEmpty)
+        XCTAssertNil(model.selectedComparisonID)
+        XCTAssertNil(model.scanProgress)
+    }
+
+    func testRejectedFolderRescanClearsPreviousScanResults() async throws {
+        let scannedFolder = try temporaryDirectory()
+        let model = try await scannedModel(root: scannedFolder)
+        model.selectedDestination = .allProfiles
+        XCTAssertTrue(model.canExportRuntimeResearchSpecimen)
+
+        await model.scanFolder(url: URL(fileURLWithPath: "/usr", isDirectory: true))
+
+        XCTAssertNotNil(model.errorMessage)
+        XCTAssertNil(model.scanResult)
+        XCTAssertTrue(model.comparisons.isEmpty)
+        XCTAssertNil(model.selectedComparisonID)
+        XCTAssertEqual(model.selectedDestination, .overview)
+        XCTAssertNil(model.scanProgress)
+        XCTAssertFalse(model.isScanning)
+        XCTAssertFalse(model.canExportRuntimeResearchSpecimen)
+    }
+
     private func temporaryDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("SandboxLensSelectionTests-\(UUID().uuidString)", isDirectory: true)
