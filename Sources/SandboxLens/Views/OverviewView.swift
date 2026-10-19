@@ -29,6 +29,12 @@ struct OverviewView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 } else if let scanResult = model.scanResult {
                     verdictBanner(scanResult: scanResult)
+                    if let provenance = model.selectedBaseline?.provenance {
+                        BaselineProvenanceNotice(
+                            provenance: provenance,
+                            identifier: "overview.baselineProvenance"
+                        )
+                    }
                     summaryGrid
                 } else {
                     gettingStarted
@@ -64,25 +70,29 @@ struct OverviewView: View {
                 title: "Matches",
                 value: model.count(status: .match),
                 symbol: "checkmark.circle.fill",
-                color: .green
+                color: .green,
+                identifier: "overview.matches"
             )
             MetricCard(
                 title: "Different",
                 value: model.count(status: .changed),
                 symbol: "exclamationmark.triangle.fill",
-                color: .orange
+                color: .orange,
+                identifier: "overview.different"
             )
             MetricCard(
                 title: "Missing",
                 value: model.count(status: .missing),
                 symbol: "questionmark.circle.fill",
-                color: .yellow
+                color: .yellow,
+                identifier: "overview.missing"
             )
             MetricCard(
                 title: "Additional",
                 value: model.count(status: .unexpected),
                 symbol: "plus.circle.fill",
-                color: .blue
+                color: .blue,
+                identifier: "overview.additional"
             )
         }
     }
@@ -147,8 +157,8 @@ struct OverviewView: View {
         let findingCount = changedCount + missingCount + additionalCount
         if findingCount == 0 {
             return ScanVerdict(
-                title: "Everything matches this exact macOS reference",
-                message: "All \(scanResult.profiles.count.formatted()) readable profiles match \(baseline.displayName). This scan found no sandbox-profile differences that need review.",
+                title: "Readable profiles match the selected reference",
+                message: "All \(scanResult.profiles.count.formatted()) readable profiles match the saved fingerprints for \(baseline.displayName). The comparison covers the recorded readable files.",
                 symbol: "checkmark.seal.fill",
                 color: .green
             )
@@ -164,7 +174,7 @@ struct OverviewView: View {
         .joined(separator: ", ")
         return ScanVerdict(
             title: "\(findingCount.formatted()) \(noun) review",
-            message: "The exact reference comparison found \(findingSummary). These are review findings, not proof of malware or compromise.",
+            message: "The saved reference comparison found \(findingSummary). These are review findings, not proof of malware or compromise.",
             symbol: "exclamationmark.triangle.fill",
             color: .orange
         )
@@ -226,6 +236,7 @@ private struct MetricCard: View {
     let value: Int
     let symbol: String
     let color: Color
+    let identifier: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -233,6 +244,7 @@ private struct MetricCard: View {
                 .foregroundStyle(color)
             Text(value.formatted())
                 .font(.title.weight(.bold).monospacedDigit())
+                .accessibilityIdentifier(identifier)
             Text(title)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)

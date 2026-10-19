@@ -8,6 +8,8 @@ All notable user-facing changes are documented here.
 
 - Runtime research specimen export with verified source bytes, static provenance, and checksums for external testing.
 - Read-only source-text viewing that rechecks the selected profile against its scan, plus scan progress.
+- Saved macOS 27.2 / 26B5112a reference, bringing the catalog to 23 snapshots and 5,953 profile records.
+- Digest-bound provenance qualifications in baseline details and specimen exports, preserving declared-unverified attribution, the Monterey version/build conflict, and unknown acquisition fields and release channels.
 
 ### Fixed
 

@@ -159,6 +159,7 @@ struct ContentView: View {
             }
         }
         .pickerStyle(.menu)
+        .accessibilityIdentifier("baseline.picker")
         .help("Choose the exact macOS release and build when possible")
     }
 

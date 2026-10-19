@@ -36,9 +36,9 @@ Exercise the complete release path:
 
 ## Current coverage
 
-The Swift suite contains 43 tests covering:
+The Swift suite contains 52 tests covering:
 
-- bundled catalog decoding and expected corpus totals;
+- bundled catalog and companion decoding, expected corpus totals, digest and identifier consistency, and retained attribution qualifications;
 - match, different, missing, additional, and symlink classifications;
 - search and category filtering;
 - export eligibility for visible selected sources across navigation, filtering, and baseline-only rows;
@@ -69,8 +69,12 @@ A release candidate is acceptable only when all of the following pass:
 7. A real app launch and rendered inspection of the overview, profile details, baseline library, and interpretation guide.
 8. A live system scan on a matching reference build when such a build is available.
 
-The current UI evidence was captured from the real app on macOS 27.0 (26A428). Its exact-build scan read 610 profiles and reported 610 matches, zero different, zero missing, and zero additional. That validates this host and catalog pairing; it is not a claim about other Macs.
+Historical UI evidence for the original catalog was captured from the real app on macOS 27.0 (26A428). The scan read 610 profiles and reported 610 matches, zero different, zero missing, and zero additional. This establishes that host/catalog byte comparison, without independently resolving the inherited capture's attribution.
+
+Native baseline assertions on macOS 27.2 (26B5112a) verified automatic selection of the saved 27.2 reference, a fresh scan with 611 matches and zero different, missing, or additional profiles, and a library of 23 references. The matching overview retained its attribution warning. Baseline details retained the unknown channel, declared-unverified attribution, recorded-paths-only coverage, arm64 observation, acquisition time, and collection limitations. Selecting Monterey retained conflicting attribution, both 21G115 and 21G72 evidence records, and its unresolved-build warning. These assertions establish this host/catalog comparison and visible qualifications, without independently attesting the reference's authenticity or runtime policy.
+
+The separate local XCUITest harness also exercises profile navigation and a populated source viewer. A prior complete run passed at revision `b568f87fa6b368710b92408652e53a93957fff0c` on the same host with the older 27.0 reference. Candidate acceptance must rerun the complete flow against the updated app; baseline assertions alone do not establish successful profile selection or source viewing.
 
 ## Deliberate gaps
 
-There are no automated accessibility/UI navigation tests yet. There is also no Developer ID signing, notarization, clean-room Gatekeeper test, or independent second-machine scan in the initial release. These gaps must remain visible in release notes rather than being represented as verified behavior.
+The native UI harness is a separate local acceptance tool, not a checked-in test target or a hosted CI check. There is no Developer ID signing, notarization, clean-room Gatekeeper test, or independent second-machine scan in the initial release. These gaps must remain visible in release notes rather than being represented as verified behavior. Matching reference labels and hashes do not independently establish build attribution, Apple authenticity, loaded policy, or runtime authorization.

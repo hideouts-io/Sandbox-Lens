@@ -76,6 +76,7 @@ struct RuntimeSpecimenBaseline: Codable, Sendable {
     let sourceCommit: String
     let confidence: String
     let notes: String
+    let provenance: BaselineProvenance?
 
     init(release: BaselineRelease) {
         id = release.id
@@ -88,6 +89,7 @@ struct RuntimeSpecimenBaseline: Codable, Sendable {
         sourceCommit = release.sourceCommit
         confidence = release.confidence
         notes = release.notes
+        provenance = release.provenance
     }
 }
 

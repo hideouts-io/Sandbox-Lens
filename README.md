@@ -24,7 +24,7 @@
 > [!IMPORTANT]
 > Sandbox Lens reports static file differences and broad policy markers. A mismatch, an `allow` rule, or an entitlement-like string is not proof that a profile ran, that an action occurred, or that a Mac is compromised.
 
-![Sandbox Lens showing an exact macOS 27.0 comparison](docs/images/overview.png)
+![Historical Sandbox Lens overview showing a macOS 27.0 byte comparison](docs/images/overview.png)
 
 ## What Sandbox Lens does
 
@@ -32,7 +32,7 @@ Sandbox Lens inventories readable `.sb` files and compares their paths and SHA-2
 
 A macOS sandbox profile is a Scheme-like text policy that can restrict which files, services, processes, and network operations a sandboxed process may use. Sandbox Lens reads the policy as evidence; it does not load or enforce it. The app is intended for Mac owners who need a clear first explanation as well as developers, reverse engineers, incident responders, and macOS researchers who need the underlying paths and hashes.
 
-The bundled catalog currently contains **22 build-specific snapshots and 5,342 profile records**, spanning macOS 10.9.5 through macOS 27.0. Coverage is intentionally described as incomplete: Apple does not publish a version-indexed archive of every raw profile, and public snapshots are sparse after Catalina. See [RESEARCH.md](RESEARCH.md) for provenance, known gaps, and the evidence model.
+The bundled catalog currently contains **23 snapshots and 5,953 profile records**, spanning declared macOS versions 10.9.5 through 27.2. The new 27.2 / 26B5112a reference records 611 paths from an arm64 local capture. Version, build, and channel declarations retain their provenance qualifications, including unresolved Monterey attribution and an unknown channel for 27.2. Coverage is incomplete: Apple does not publish a version-indexed archive of every raw profile, and public snapshots are sparse after Catalina. See [RESEARCH.md](RESEARCH.md) for provenance, known gaps, and the evidence model.
 
 ### Highlights
 
@@ -42,7 +42,7 @@ The bundled catalog currently contains **22 build-specific snapshots and 5,342 p
 - Plain-language verdicts with separate Match, Different, Missing, and Additional groups.
 - Search across filename, path, and status.
 - Narrow static summaries for defaults, broad file/network/process rules, imports, and `no-sandbox` markers.
-- Source URL, source revision, build, channel, confidence, and hash details for each reference.
+- Source URL and revision when recorded, declared build/channel, attribution warnings, coverage limits, and hash details for each reference.
 - Read-only source-text viewing and scan progress in source builds.
 - Runtime research specimen export in source builds with original bytes, static provenance, and checksums for external testing.
 - Local, read-only scanning; explicit exports create a new folder without modifying source profiles. No uploads, policy execution, compilation, or remediation.
@@ -50,7 +50,7 @@ The bundled catalog currently contains **22 build-specific snapshots and 5,342 p
 ## Start here
 
 1. Open Sandbox Lens.
-2. Leave the automatically selected baseline in place when it exactly matches your macOS product version and build.
+2. Check the automatically selected baseline's product version, build, and provenance warnings. Matching version/build labels do not independently verify attribution.
 3. Click **Scan This Mac**.
 4. Read the overview before opening individual findings.
 5. Treat a non-match as a review item, not a verdict. Confirm the exact OS build and seek independent evidence before drawing a security conclusion.
@@ -95,7 +95,7 @@ The initial community build is ad-hoc signed with Hardened Runtime enabled. It i
 | **Missing** | The selected reference expects a path that was not read in the scan. | Deletion by an attacker. OS changes and access limits must be reconciled. |
 | **Additional** | The scan contains a profile absent from the selected reference. | Malware. It may belong to another OS build or third-party software. |
 
-An exact match is a byte-identity result. The other categories require interpretation. If the baseline product version and build do not exactly match the Mac, choose the result closest to **version drift**, not **compromise**.
+An exact match is a byte-identity result. It does not resolve a reference's declared-unverified or conflicting attribution. The other categories require interpretation. If the baseline product version and build do not exactly match the Mac, choose the result closest to **version drift**, not **compromise**.
 
 ## Supported inputs and analysis boundary
 
@@ -150,10 +150,12 @@ Raw Apple profile text is intentionally ignored by Git and excluded from the app
 ./scripts/capture_local_baseline.sh "$PWD/ResearchCorpus/raw"
 ./scripts/build_baseline_manifest.py \
   --raw-root "$PWD/ResearchCorpus/raw" \
-  --output "$PWD/Sources/SandboxLens/Resources/Baselines.json"
+  --output "$PWD/dist/research/Baselines.generated.json"
 ```
 
-Every accepted snapshot requires `provenance.json` with a release, build, source URL, exact source revision, confidence, and notes. Independently review new sources before treating them as trusted references.
+The generator emits the derived catalog only. Bundled updates also require its matching schema-2 companion, `Sources/SandboxLens/Resources/BaselineProvenance.json`; the app rejects mismatched catalog bytes or snapshot identifiers. The current pair was imported unchanged from local SandboxBaselines commit `63ffb6606639f96b20dce8e5189a95aa87f99944`. See [Reproducibility and updating](RESEARCH.md#8-reproducibility-and-updating) for the pinned generator, digests, and retained qualifications.
+
+Record a snapshot's version/build declarations, source method, acquisition evidence, architecture, and limitations. Unknown fields must remain unknown, and conflicting source evidence must remain visible. Independently review new sources before treating them as trusted references.
 
 ## Project structure
 
@@ -171,6 +173,7 @@ scripts/                      Baseline, integrity, staging, and release tools
 ## Known limitations
 
 - Public baseline coverage is incomplete and uneven across macOS releases.
+- All bundled snapshots cover recorded paths only; most attribution is declared-unverified, and the Monterey version/build reports conflict.
 - The initial release is not Developer ID signed or notarized.
 - Some protected locations may be unreadable under the current user account; the scan reports these failures.
 - Static files cannot establish runtime policy use, network traffic, persistence, attribution, or compromise.

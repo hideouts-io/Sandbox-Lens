@@ -109,6 +109,40 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
         XCTAssertTrue(unavailable.app.buildIsNull)
     }
 
+    func testExportsSavedCaptureProvenanceWithoutPromotingSyntheticSourceOrigin() async throws {
+        let root = try temporaryDirectory()
+        let bytes = Data("(version 1)\n(deny default)\n".utf8)
+        let fixture = try await scannedFixture(root: root, bytes: bytes)
+        let catalog = try BaselineRepository.loadBundledCatalog()
+        let baseline = try XCTUnwrap(catalog.releases.first { $0.id == "macos-27.2-26B5112a" })
+        let comparison = try XCTUnwrap(
+            ComparisonEngine.compare(scannedProfiles: fixture.scan.profiles, baseline: baseline)
+                .first { $0.scanned != nil }
+        )
+        let destination = try temporaryDirectory().appendingPathComponent("qualified-specimen", isDirectory: true)
+
+        try RuntimeSpecimenExporter.export(
+            comparison: comparison,
+            scan: fixture.scan,
+            baseline: baseline,
+            host: SystemIdentity(productVersion: "27.2", buildVersion: "26B5112a"),
+            app: RuntimeSpecimenAppIdentity(bundleIdentifier: nil, version: nil, build: nil),
+            destination: destination,
+            exportedAt: Date(timeIntervalSince1970: 1_720_000_000)
+        )
+
+        let manifest = try readManifest(destination: destination)
+        let selected = try XCTUnwrap(manifest.selectedBaseline)
+        XCTAssertEqual(selected.provenance, baseline.provenance)
+        XCTAssertEqual(selected.provenance?.attribution, .declaredUnverified)
+        XCTAssertEqual(selected.provenance?.architecture, "arm64")
+        XCTAssertEqual(selected.provenance?.collectedAt, "2026-10-19T07:27:20.757415+00:00")
+        XCTAssertEqual(selected.releaseChannel, "unknown")
+        XCTAssertNil(manifest.source.originatingSystem)
+        XCTAssertEqual(manifest.runtimeObservation, .notPerformed)
+        XCTAssertEqual(try Data(contentsOf: destination.appendingPathComponent("profile.sb")), bytes)
+    }
+
     func testRejectsExportInsideScannedFolderAndPreservesRescan() async throws {
         let root = try temporaryDirectory()
         let fixture = try await scannedFixture(root: root, bytes: Data("(version 1)\n(deny default)\n".utf8))
@@ -483,7 +517,8 @@ final class RuntimeSpecimenExporterTests: XCTestCase {
                 isSymbolicLink: profile.isSymbolicLink,
                 symbolicLinkTarget: profile.symbolicLinkTarget,
                 analysis: profile.analysis
-            )]
+            )],
+            provenance: nil
         )
     }
 }
